@@ -1,21 +1,17 @@
 import { rule } from '@/services/ant-design-pro/api';
 import { CloudUploadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import {
-  PageContainer,
-  ProTable,
-} from '@ant-design/pro-components';
+import { PageContainer, ProTable } from '@ant-design/pro-components';
 import { FormattedMessage, useIntl } from '@umijs/max';
 import { Button, Input } from 'antd';
 import React, { useRef, useState } from 'react';
-import Upload from '../Vector/components/Upload';
-import UploadProgress from './components/UploadProgress';
+import Upload from './components/Upload';
 
 const Vector: React.FC = () => {
+  const uploadModalRef: any = useRef(null);
 
-  const uploadModalRef:any= useRef(null);
-
-  const [updateModalOpen, handleUpdateModalOpen] = useState<boolean>(false);
+  // 设置uploadModalOpen
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   const [showDetail, setShowDetail] = useState<boolean>(false);
 
@@ -24,7 +20,6 @@ const Vector: React.FC = () => {
   const [selectedRowsState, setSelectedRows] = useState<API.RuleListItem[]>([]);
 
   const intl = useIntl();
-
 
   const columns: ProColumns<API.RuleListItem>[] = [
     {
@@ -54,12 +49,7 @@ const Vector: React.FC = () => {
       valueType: 'textarea',
     },
     {
-      title: (
-        <FormattedMessage
-          id="pages.searchTable.dataSize"
-          defaultMessage="数据大小"
-        />
-      ),
+      title: <FormattedMessage id="pages.searchTable.dataSize" defaultMessage="数据大小" />,
       dataIndex: 'callNo',
       sorter: true,
       hideInForm: true,
@@ -76,16 +66,16 @@ const Vector: React.FC = () => {
       valueEnum: {
         0: {
           text: (
-            <FormattedMessage
-              id="pages.searchTable.nameStatus.default"
-              defaultMessage="未发布"
-            />
+            <FormattedMessage id="pages.searchTable.nameStatus.default" defaultMessage="未发布" />
           ),
           status: 'Default',
         },
         1: {
           text: (
-            <FormattedMessage id="pages.searchTable.nameStatus.publishing" defaultMessage="发布中" />
+            <FormattedMessage
+              id="pages.searchTable.nameStatus.publishing"
+              defaultMessage="发布中"
+            />
           ),
           status: 'Processing',
         },
@@ -97,22 +87,14 @@ const Vector: React.FC = () => {
         },
         3: {
           text: (
-            <FormattedMessage
-              id="pages.searchTable.nameStatus.failed"
-              defaultMessage="发布失败"
-            />
+            <FormattedMessage id="pages.searchTable.nameStatus.failed" defaultMessage="发布失败" />
           ),
           status: 'Error',
         },
       },
     },
     {
-      title: (
-        <FormattedMessage
-          id="pages.searchTable.uploadUpdatedAt"
-          defaultMessage="上传时间"
-        />
-      ),
+      title: <FormattedMessage id="pages.searchTable.uploadUpdatedAt" defaultMessage="上传时间" />,
       sorter: true,
       dataIndex: 'updatedAt',
       valueType: 'dateTime',
@@ -150,10 +132,7 @@ const Vector: React.FC = () => {
           <FormattedMessage id="pages.searchTable.publish" defaultMessage="发布" />
         </a>,
         <a key="subscribeAlert">
-          <FormattedMessage
-            id="pages.searchTable.download"
-            defaultMessage="下载"
-          />
+          <FormattedMessage id="pages.searchTable.download" defaultMessage="下载" />
         </a>,
       ],
     },
@@ -174,13 +153,16 @@ const Vector: React.FC = () => {
         toolBarRender={() => [
           <Button
             type="primary"
+            // W=true
             key="primary"
             onClick={() => {
               // 打开上传的Modal
-              uploadModalRef.current.openModal();
+              setUploadModalOpen(true);
+              // uploadModalRef.current.openModal();
             }}
           >
-            <CloudUploadOutlined /> <FormattedMessage id="pages.searchTable.upload" defaultMessage="上传" />
+            <CloudUploadOutlined />{' '}
+            <FormattedMessage id="pages.searchTable.upload" defaultMessage="上传" />
           </Button>,
         ]}
         request={rule}
@@ -191,13 +173,12 @@ const Vector: React.FC = () => {
           },
         }}
       />
-      <Upload
-        ref ={uploadModalRef}
-      />
-      <UploadProgress/>
-
+      <Upload />
     </PageContainer>
   );
 };
 
 export default Vector;
+function handleUpdateModalOpen(arg0: boolean) {
+  throw new Error('Function not implemented.');
+}
