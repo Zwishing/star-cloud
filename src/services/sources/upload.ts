@@ -8,3 +8,19 @@ export async function upload(body: File, options?: { [p: string]: any }) {
     ...(options || {}),
   });
 }
+
+export async function retrievePostUrl(
+  params: {
+    fileName: string,
+    size: number,
+  },
+  options?: { [key: string]: any },
+) {
+  return request<API.Upload>('/api/retrieveUrl', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
