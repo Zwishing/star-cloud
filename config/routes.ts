@@ -43,27 +43,21 @@ export default [
       },
     ],
     // component: './Sources',
-    
   },
   {
     path: '/services',
     name: 'services',
     icon: 'customerService',
-    // access: 'canAdmin',
+    access: 'canAdmin',
     routes: [
       {
         path: '/services',
-        redirect: '/services/vector',
+        redirect: '/services/service-manager',
       },
       {
-        path: '/services/vector',
-        name: 'vector',
-        component: './Admin',
-      },
-      {
-        path: '/services/image',
-        name: 'image',
-        component: './Admin',
+        path: '/services/service-manager',
+        name: 'serviceManager',
+        component: './Services/ServiceManager',
       },
     ],
   },
@@ -81,5 +75,10 @@ export default [
     path: '*',
     layout: false,
     component: './404',
+  },
+  {
+    path: '/services/edit',
+    component: './Services/ServiceEdit',
+    layout: false,
   },
 ];

@@ -1,0 +1,9 @@
+/* SidebarPanel.css */
+.sidebar-panel {
+  transition: all 0.3s ease;
+}
+
+.sidebar-panel.collapsed {
+  transform: translateX(-100%);
+  opacity: 0;
+}
