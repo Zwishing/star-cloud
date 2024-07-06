@@ -1,4 +1,5 @@
 import { Button, Checkbox, Col, Empty, List, Row, Tag } from 'antd';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useState } from 'react';
 import FileListActions from './FileListActions';
 
@@ -20,23 +21,23 @@ const FileList = ({
       }
     };
 
-    const showPublishModal = (e) => {
+    const showPublishModal = (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
       setSelectedFile(item);
       setPublishModalVisible(true);
     };
 
-    const showDeleteModal = (e) => {
+    const showDeleteModal = (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
       setSelectedFile(item);
       setDeleteModalVisible(true);
     };
 
-    const handleCheckedChange = (e) => {
+    const handleCheckedChange = (e: CheckboxChangeEvent) => {
       // e.stopPropagation(); // 阻止事件冒泡
       const { value } = e.target;
       setSelectedKey((prevKey) => (prevKey === value ? null : value));
-      setSelectedFile((prevItem) => (prevItem?.key === item.key ? null : item));
+      setSelectedFile((prevItem: { key: any }) => (prevItem?.key === item.key ? null : item));
     };
 
     return (
@@ -105,9 +106,7 @@ const FileList = ({
             }}
           >
             <Row gutter={16} justify="center" align="middle">
-              <Col flex="3">
-                <Checkbox></Checkbox> 名称
-              </Col>
+              <Col flex="3">名称</Col>
               <Col flex="2">大小</Col>
               <Col flex="3">修改日期</Col>
               <Col flex="2">状态</Col>
@@ -120,7 +119,13 @@ const FileList = ({
         dataSource={data}
         renderItem={renderListItem}
       />
-      {selectedKey && <FileListActions />}
+      {selectedKey && (
+        <FileListActions
+          showPublishModal={undefined}
+          showDeleteModal={undefined}
+          handleCancelSelection={undefined}
+        />
+      )}
     </>
   );
 };

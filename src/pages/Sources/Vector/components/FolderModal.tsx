@@ -1,7 +1,7 @@
 import { Input, Modal } from 'antd';
 
 const FolderModal = ({ visible, handleOk, handleCancel, newFolderName, setNewFolderName }) => (
-  <Modal title="新建文件夹" visible={visible} onOk={handleOk} onCancel={handleCancel}>
+  <Modal title="新建文件夹" open={visible} onOk={handleOk} onCancel={handleCancel}>
     <Input
       value={newFolderName}
       onChange={(e) => setNewFolderName(e.target.value)}
