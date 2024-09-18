@@ -105,7 +105,7 @@ const LoginMessage: React.FC<{ content: string }> = ({ content }) => (
 
 const Login: React.FC = () => {
   const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
-  const [category, setCategory] = useState<number>(0);
+  const [category, setCategory] = useState<string>("username");
   const { initialState, setInitialState } = useModel('@@initialState');
   const { styles } = useStyles();
   const intl = useIntl();
@@ -178,10 +178,10 @@ const Login: React.FC = () => {
                 })}
               />
             )}
-            {category === 'account' && (
+            {category === 'username' && (
               <>
                 <ProFormText
-                  name="username"
+                  name="userAccount"
                   fieldProps={{ size: 'large', prefix: <UserOutlined /> }}
                   placeholder={intl.formatMessage({
                     id: 'pages.login.username.placeholder',
@@ -221,7 +221,7 @@ const Login: React.FC = () => {
               </>
             )}
             {status === 'error' && loginType === 'mobile' && <LoginMessage content="验证码错误" />}
-            {type === 'mobile' && (
+            {category === 'mobile' && (
               <>
                 <ProFormText
                   fieldProps={{ size: 'large', prefix: <MobileOutlined /> }}
