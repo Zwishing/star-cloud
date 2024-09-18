@@ -1,5 +1,5 @@
-import { getItems } from '@/services/sources/files'; // 导入获取数据的服务函数
-import { API } from '@/services/sources/typings'; // 导入定义的类型
+import { getSourceItems } from '@/services/source/files'; // 导入获取数据的服务函数
+import { API } from '@/services/source/typings'; // 导入定义的类型
 import { message } from 'antd';
 import { useEffect, useState } from 'react';
 import DeleteModal from './DeleteModal';
@@ -21,14 +21,14 @@ const FileSystem = () => {
   const [uploads, setUploads] = useState<any[]>([]); // 上传文件状态数组
 
   // 用于存储从API获取的数据
-  const [data, setData] = useState<API.Item[]>([]);
+  const [items, setItems] = useState<API.Item[]>([]);
 
   // useEffect钩子，在组件挂载时获取数据
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const items = await getItems({ category: 'vector', path: '' }); // 调用获取数据的函数
-        // setData(items.data); // 将获取的数据设置到状态中
+        const items = await getSourceItems({ sourceType: 'vector', path: '' }); // 调用获取数据的函数
+        setItems(items.data); // 将获取的数据设置到状态中
         console.log(items);
       } catch (error) {
         console.error('获取数据出错:', error); // 如果获取数据失败，输出错误信息
@@ -66,7 +66,7 @@ const FileSystem = () => {
   // 处理添加文件夹模态框中确定按钮的函数
   const handleOk = () => {
     if (newFolderName.trim()) {
-      const newData = [...data]; // 创建数据副本
+      const newData = [...items]; // 创建数据副本
       let currentDir = newData;
 
       // 将新文件夹添加到当前目录
@@ -79,7 +79,7 @@ const FileSystem = () => {
         path: '',
       });
 
-      setData(newData); // 更新状态中的数据
+      setItems(newData); // 更新状态中的数据
       setNewFolderName(''); // 清空新文件夹名称输入框
       setModalVisible(false); // 隐藏模态框
     } else {
@@ -107,14 +107,14 @@ const FileSystem = () => {
 
   // 处理删除模态框中确定按钮的函数
   const handleDeleteOk = () => {
-    const newData = [...data]; // 创建数据副本
+    const newData = [...items]; // 创建数据副本
     let currentDir = newData;
 
     // 在当前目录中找到选中文件的索引并删除
     const index = currentDir.findIndex((item) => item.key === selectedFile?.key);
     currentDir.splice(index, 1);
 
-    setData(newData); // 更新状态中的数据
+    setItems(newData); // 更新状态中的数据
     setDeleteModalVisible(false); // 隐藏删除模态框
   };
 
@@ -145,7 +145,7 @@ const FileSystem = () => {
     });
   };
 
-  let currentDir = data; // 初始化当前目录为从API获取的数据
+  let currentDir = items; // 初始化当前目录为从API获取的数据
 
   currentDir = filteredData(currentDir, searchKeyword); // 根据搜索关键词过滤当前目录
 

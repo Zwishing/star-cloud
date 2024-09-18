@@ -48,7 +48,7 @@ export default [
     path: '/services',
     name: 'services',
     icon: 'customerService',
-    access: 'canAdmin',
+    // access: 'canAdmin',
     routes: [
       {
         path: '/services',

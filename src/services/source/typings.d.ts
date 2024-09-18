@@ -1,7 +1,7 @@
 // @ts-ignore
 /* eslint-disable */
 
-export declare namespace API {
+export declare namespace Source {
   type Upload = {
     bucket?: string;
     key?: string;
@@ -29,7 +29,7 @@ export declare namespace API {
   };
 
   type ItemParams = {
-    category: 'vector' | 'imagery';
+    sourceType: 'vector' | 'imagery';
     path: string;
   };
 }
