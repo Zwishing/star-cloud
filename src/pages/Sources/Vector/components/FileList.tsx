@@ -1,5 +1,10 @@
-import { Button, Checkbox, Col, Empty, List, Row, Tag } from 'antd';
+import {  Checkbox, Col, Empty, List, Row, } from 'antd';
+import {
+  FolderOpenTwoTone,
+  FileTextTwoTone,
+} from '@ant-design/icons';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { Source } from '@/services/source/typings'; // 导入定义的类型
 import { useState } from 'react';
 import FileListActions from './FileListActions';
 
@@ -12,11 +17,12 @@ const FileList = ({
   setDeleteModalVisible,
 }) => {
   const [selectedKey, setSelectedKey] = useState(null);
-  const [hoveredKey, setHoveredKey] = useState(null);
+  const [hoveredKey, setHoveredKey] = useState<string>("");
 
-  const renderListItem = (item) => {
+  const renderListItem = (item:Source.Item) => {
     const onItemClick = () => {
       if (item.type === 'folder' && selectedKey !== item.key) {
+        
         setCurrentPath([...currentPath, item.key]);
       }
     };
@@ -50,7 +56,7 @@ const FileList = ({
             selectedKey === item.key ? '#e6f7ff' : hoveredKey === item.key ? '#f0f0f0' : 'inherit',
         }}
         onMouseEnter={() => setHoveredKey(item.key)}
-        onMouseLeave={() => setHoveredKey(null)}
+        onMouseLeave={() => setHoveredKey('')}
       >
         <Row gutter={16} style={{ width: '100%' }}>
           <Col flex="3">
@@ -68,24 +74,14 @@ const FileList = ({
                 )}
               </Col>
               <Col>
-                {item.icon} {item.title}
+                {item.type === 'folder' ? <FolderOpenTwoTone/>:<FileTextTwoTone/>}{item.name}
               </Col>
             </Row>
           </Col>
           <Col flex="2">{item.size}</Col>
-          <Col flex="3">{item.modifiedTime}</Col>
-          <Col flex="2">{item.type === 'file' ? <Tag color="red">未发布</Tag> : null}</Col>
+          <Col flex="3">{item.lastModified}</Col>
+          <Col flex="2"></Col>
           <Col flex="2">
-            {item.type === 'file' ? (
-              <>
-                <Button type="link" size="small" onClick={showPublishModal}>
-                  发布
-                </Button>
-                <Button type="link" size="small" onClick={showDeleteModal}>
-                  删除
-                </Button>
-              </>
-            ) : null}
           </Col>
         </Row>
         {item.children && item.children.length === 0 && currentPath.includes(item.key) && (
@@ -109,7 +105,7 @@ const FileList = ({
               <Col flex="3">名称</Col>
               <Col flex="2">大小</Col>
               <Col flex="3">修改日期</Col>
-              <Col flex="2">状态</Col>
+              <Col flex="2"></Col>
               <Col flex="2"></Col>
             </Row>
           </div>

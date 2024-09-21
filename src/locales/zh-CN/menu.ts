@@ -1,7 +1,7 @@
 export default {
-  'menu.sources': '源数据',
-  'menu.sources.vector': '矢量数据',
-  'menu.sources.image': '影像数据',
+  'menu.source': '源数据',
+  'menu.source.vector': '矢量数据',
+  'menu.source.imagery': '影像数据',
   'menu.more-blocks': '更多区块',
   'menu.home': '首页',
   'menu.services': '数据服务',

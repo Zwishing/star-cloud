@@ -1,4 +1,4 @@
-import { retrievePostUrl } from '@/services/sources/upload';
+import { retrievePostUrl } from '@/services/source/upload';
 import { CloudUploadOutlined } from '@ant-design/icons';
 import { request } from '@umijs/max';
 import { Upload as AntUpload, FloatButton, Popover, UploadProps, message } from 'antd';

@@ -75,7 +75,7 @@ const FileUploadModal = ({ visible, onCancel, onUpload }) => {
   return (
     <Modal
       title="上传文件"
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       footer={[
         <Button type="primary" key="cancel" onClick={onCancel}>

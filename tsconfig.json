@@ -8,16 +8,16 @@
     "jsx": "preserve",
     "esModuleInterop": true,
     "sourceMap": true,
-    "baseUrl": "./",
+    "baseUrl": ".",
     "skipLibCheck": true,
     "experimentalDecorators": true,
     "strict": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@@/*": ["./src/.umi/*"],
-      "@@test/*": ["./src/.umi-test/*"]
+      "@/*": ["src/*"],
+      "@@/*": ["src/.umi/*"],
+      "@@test/*": ["src/.umi-test/*"]
     }
   },
   "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx"]

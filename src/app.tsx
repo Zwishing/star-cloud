@@ -1,13 +1,13 @@
 import { AvatarDropdown, AvatarName, Footer, Question, SelectLang } from '@/components';
-import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
+import { currentUser as queryCurrentUser } from '@/services/user/api';
 import { LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
 import type { RunTimeLayoutConfig } from '@umijs/max';
 import { Link, history } from '@umijs/max';
+import type { RequestConfig } from 'umi';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
-import type { RequestConfig } from 'umi';
 
 // 判断是否是开发环境
 const isDev = process.env.NODE_ENV === 'development';
@@ -20,9 +20,9 @@ const loginPath = '/user/login';
  */
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
-  currentUser?: API.CurrentUser;
+  currentUser?: User.CurrentUser;
   loading?: boolean;
-  fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
+  fetchUserInfo?: () => Promise<User.CurrentUser | undefined>;
 }> {
   // 定义一个函数，用于获取当前用户信息
   const fetchUserInfo = async () => {
@@ -148,6 +148,6 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
  * 它基于 axios 和 ahooks 的 useRequest 提供了一套统一的网络请求和错误处理方案。
  * @doc https://umijs.org/docs/max/request#配置
  */
-export const request:RequestConfig = {
+export const request: RequestConfig = {
   ...errorConfig, // 错误处理配置
 };

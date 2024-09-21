@@ -23,22 +23,22 @@ export default [
     ],
   },
   {
-    path: '/sources',
-    name: 'sources',
+    path: '/source',
+    name: 'source',
     icon: 'profile',
     routes: [
       {
-        path: '/sources',
-        redirect: '/sources/vector',
+        path: '/source',
+        redirect: '/source/vector',
       },
       {
-        path: '/sources/vector',
+        path: '/source/vector',
         name: 'vector',
         component: './Sources/Vector',
       },
       {
-        path: '/sources/image',
-        name: 'image',
+        path: '/source/imagery',
+        name: 'imagery',
         // component: './Sources',
       },
     ],
@@ -48,7 +48,7 @@ export default [
     path: '/services',
     name: 'services',
     icon: 'customerService',
-    access: 'canAdmin',
+    // access: 'canAdmin',
     routes: [
       {
         path: '/services',
