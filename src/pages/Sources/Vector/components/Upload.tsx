@@ -1,6 +1,5 @@
-import { retrievePostUrl } from '@/services/source/upload';
+import { upload } from '@/services/source/files';
 import { CloudUploadOutlined } from '@ant-design/icons';
-import { request } from '@umijs/max';
 import { Upload as AntUpload, FloatButton, Popover, UploadProps, message } from 'antd';
 import { useState } from 'react';
 const { Dragger } = AntUpload;
@@ -12,19 +11,10 @@ const Upload: React.FC = () => {
     accept: '.zip,.geojson',
     // // 显示上传列表
     // action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
-    customRequest: (info) => {
+    customRequest: async (info) => {
       const name = info.file.name;
       const size = info.file.size;
-      retrievePostUrl({ fileName: name, size: size })
-        .then((resp) => {
-          // 上传至minio
-          request(resp)
-            .then()
-            .catch((error) => {})
-            .finally(() => {});
-        })
-        .catch((error) => {})
-        .finally(() => {});
+      const resp = await upload({ file: info.file, key: '', sourceCategory: 'vector' });
     },
     onChange(info) {
       const { status } = info.file;

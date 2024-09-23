@@ -1,6 +1,7 @@
-import { getSourceItems } from '@/services/source/files';
+import { FolderIcon } from '@/components/Icon';
+import { getNextItems } from '@/services/source/files';
 import { Source } from '@/services/source/typings'; // 导入定义的类型
-import { FileTextTwoTone, FolderOpenTwoTone } from '@ant-design/icons';
+import { FileTextTwoTone } from '@ant-design/icons';
 import { Checkbox, Col, Empty, List, Row } from 'antd';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useState } from 'react';
@@ -23,9 +24,10 @@ const FileList = ({
     const onItemClick = async () => {
       if (item.type === 'folder') {
         try {
-          const resp = await getSourceItems({ key: item.key, sourceCategory: 'vector' });
+          const resp = await getNextItems({ key: item.key, sourceCategory: 'vector' });
           setData(resp.data.items); // 将获取的数据设置到状态中
-          setKey(resp.data.key);
+          setKey(item.key);
+          setCurrentPath((currentPath: string[]) => [...currentPath, item.key]);
         } catch (error) {
           console.error(error);
         }
@@ -79,7 +81,8 @@ const FileList = ({
                 )}
               </Col>
               <Col>
-                {item.type === 'folder' ? <FolderOpenTwoTone /> : <FileTextTwoTone />}
+                {item.type === 'folder' ? <FolderIcon /> : <FileTextTwoTone />}
+
                 {item.name}
               </Col>
             </Row>

@@ -1,4 +1,4 @@
-import { getSourceItems,newFolder } from '@/services/source/files'; // 导入获取数据的服务函数
+import { getHomeItems, getPreviousItems, newFolder } from '@/services/source/files'; // 导入获取数据的服务函数
 import { Source } from '@/services/source/typings'; // 导入定义的类型
 import { message } from 'antd';
 import { useEffect, useState } from 'react';
@@ -10,7 +10,7 @@ import FolderModal from './FolderModal';
 
 const FileSystem = () => {
   // 状态变量
-  const [currentPath, setCurrentPath] = useState<string[]>([]); // 当前路径数组
+  const [currentPath, setCurrentPath] = useState<string[]>(['']); // 当前路径数组
   const [modalVisible, setModalVisible] = useState(false); // 模态框可见状态
   const [newFolderName, setNewFolderName] = useState(''); // 新文件夹名称
   const [_, setPublishModalVisible] = useState(false); // 发布模态框可见状态
@@ -19,24 +19,26 @@ const FileSystem = () => {
   const [searchKeyword, setSearchKeyword] = useState(''); // 搜索关键词状态
   const [uploadModalVisible, setUploadModalVisible] = useState(false); // 上传模态框可见状态
   const [uploads, setUploads] = useState<any[]>([]);
-  const [key, setKey] = useState<string>("");// 上传文件状态数组
-  const [path, setPath] = useState<string>("/vector");
-  
+  const [key, setKey] = useState<string>(''); // 上传文件状态数组
+  const [path, setPath] = useState<string>('/vector');
+
   // 用于存储从API获取的数据
   const [data, setData] = useState<Source.Item[]>([]);
 
+  const fetchHomeData = async () => {
+    try {
+      const resp = await getHomeItems({ sourceCategory: 'vector' }); // 调用获取数据的函数
+      setData(resp.data.items); // 将获取的数据设置到状态中
+      setKey(resp.data.key);
+      setCurrentPath(() => [resp.data.key]);
+    } catch (error) {
+      console.error('获取数据出错:', error); // 如果获取数据失败，输出错误信息
+    }
+  };
+
   // useEffect钩子，在组件挂载时获取数据
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const resp = await getSourceItems({ "key": key, "sourceCategory": "vector"}); // 调用获取数据的函数
-        setData(resp.data.items); // 将获取的数据设置到状态中
-        setKey(resp.data.key)
-      } catch (error) {
-        console.error('获取数据出错:', error); // 如果获取数据失败，输出错误信息
-      }
-    };
-    fetchData(); // 调用获取数据的函数
+    fetchHomeData(); // 调用获取数据的函数
   }, []); // 空依赖数组确保仅在组件挂载时执行一次
 
   // 处理添加文件夹的函数
@@ -66,28 +68,27 @@ const FileSystem = () => {
   };
 
   // 处理添加文件夹模态框中确定按钮的函数
-  const handleOkAddFolder = async () => {
+  const handleOkNewFolder = async () => {
     if (newFolderName.trim()) {
       const newData = [...data]; // 创建数据副本
-      let currentDir = newData;
-      const folder :Source.NewFolderReq=  {
+      const folder: Source.NewFolderReq = {
         sourceCategory: 'vector',
-        key:   key,
+        key: key,
         name: newFolderName,
         path: `${path}/${newFolderName}`,
-      }
-      
-      setData(newData); // 更新状态中的数据
+      };
+
       setNewFolderName(''); // 清空新文件夹名称输入框
       setModalVisible(false); // 隐藏模态框
       try {
-        const item = await newFolder(folder)
+        const item = await newFolder(folder);
         if (item.code === 200) {
           // 将新文件夹添加到当前目录
-          currentDir.push(item.data);
-        } 
-      } catch(error) { 
-          message.error("文件夹创建失败")
+          newData.push(item.data);
+          setData(newData);
+        }
+      } catch (error) {
+        message.error('文件夹创建失败');
       }
     } else {
       message.error('文件夹名称不能为空'); // 如果文件夹名称为空，显示错误消息
@@ -131,19 +132,30 @@ const FileSystem = () => {
   };
 
   // 处理返回按钮的函数
-  const handleBackButtonClick = () => {
-    if (currentPath.length > 0) {
-      setCurrentPath(currentPath.slice(0, -1)); // 移除当前路径数组中的最后一项
+  const handleBackButtonClick = async () => {
+    try {
+      const resp = await getPreviousItems({ key: key, sourceCategory: 'vector' });
+      if (resp.code === 200) {
+        setData(resp.data.items); // 将获取的数据设置到状态中
+        setKey(resp.data.key);
+        setCurrentPath((currentDir) => {
+          const newDir = [...currentDir]; // 创建当前目录的副本
+          newDir.pop();
+          return newDir;
+        });
+      }
+    } catch (error) {
+      console.error('获取数据出错:', error); // 如果获取数据失败，输出错误信息
     }
   };
 
   // 处理主页按钮的函数（重置当前路径）
   const handleHomeButtonClick = () => {
-    setCurrentPath([]); // 设置当前路径为空数组
+    fetchHomeData(); // 调用获取数据的函数
   };
 
   // 根据搜索关键词过滤数据的函数
-  const filteredData = (items , keyword: string) => {
+  const filteredData = (items, keyword: string) => {
     if (!keyword) return items; // 如果关键词为空，返回所有项
 
     return items.filter((item) => {
@@ -185,7 +197,7 @@ const FileSystem = () => {
       {/* 渲染FolderModal组件，并传递props */}
       <FolderModal
         visible={modalVisible}
-        handleOk={handleOkAddFolder}
+        handleOk={handleOkNewFolder}
         handleCancel={handleCancel}
         newFolderName={newFolderName}
         setNewFolderName={setNewFolderName}

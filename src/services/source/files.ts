@@ -2,8 +2,8 @@ import { request } from '@umijs/max';
 import { Source } from './typings';
 
 /** 获取数据 */
-export async function getSourceItems(params: Source.ItemsParams, options?: { [p: string]: any }) {
-  return request<Source.ItemsResp>(`/v1/source/${params.sourceCategory}/items`, {
+export async function getNextItems(params: Source.ItemsParams, options?: { [p: string]: any }) {
+  return request<Source.ItemsResp>(`/v1/source/${params.sourceCategory}/nextItems`, {
     method: 'GET',
     params: {
       ...params,
@@ -12,20 +12,22 @@ export async function getSourceItems(params: Source.ItemsParams, options?: { [p:
   });
 }
 
-export async function addSourceItem(
-  params: Source.ItemsParams,
-  body: Source.Item,
-  options?: { [p: string]: any },
-) {
-  return request<Source.ItemsResp>(`/v1/source/${params.sourceCategory}/add`, {
-    method: 'POST',
+export async function getPreviousItems(params: Source.ItemsParams, options?: { [p: string]: any }) {
+  return request<Source.ItemsResp>(`/v1/source/${params.sourceCategory}/previousItems`, {
+    method: 'GET',
     params: {
       ...params,
     },
-    headers: {
-      'Content-Type': 'application/json',
+    ...(options || {}),
+  });
+}
+
+export async function getHomeItems(params: Source.HomeItemsParams, options?: { [p: string]: any }) {
+  return request<Source.ItemsResp>(`/v1/source/${params.sourceCategory}/homeItems`, {
+    method: 'GET',
+    params: {
+      ...params,
     },
-    data: body,
     ...(options || {}),
   });
 }
@@ -37,6 +39,21 @@ export async function newFolder(body: Source.NewFolderReq, options?: { [p: strin
       'Content-Type': 'application/json',
     },
     data: body,
+    ...(options || {}),
+  });
+}
+
+export async function upload(body: Source.UploadReq, options?: { [p: string]: any }) {
+  const formData = new FormData();
+
+  // 将文件和其他数据添加到 FormData
+  formData.append('file', body.file); // 上传文件
+  formData.append('sourceCategory', body.sourceCategory);
+  formData.append('key', body.key);
+  formData.append('name', body.name);
+  return request<Source.ItemsResp>(`/v1/source/${body.sourceCategory}/upload`, {
+    method: 'POST',
+    data: formData,
     ...(options || {}),
   });
 }

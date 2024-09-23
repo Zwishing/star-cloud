@@ -22,7 +22,7 @@ const FileSystemHeader = ({
         <Button
           type="primary"
           icon={<HomeOutlined />}
-          disabled={currentPath.length === 0}
+          disabled={currentPath.length === 1}
           onClick={handleHomeButtonClick}
         >
           首页
@@ -30,7 +30,7 @@ const FileSystemHeader = ({
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={handleBackButtonClick}
-          disabled={currentPath.length === 0}
+          disabled={currentPath.length === 1}
           style={{ marginLeft: 8 }}
         >
           返回上一级

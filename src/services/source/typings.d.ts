@@ -4,15 +4,11 @@
 export declare namespace Source {
   type SourceCategory = 'vector' | 'imagery';
 
-  type Upload = {
-    bucket?: string;
-    key?: string;
-    policy?: string;
-    url?: string;
-    algorithm?: string;
-    credential?: string;
-    date?: string;
-    signature?: string;
+  type UploadReq = {
+    sourceCategory: SourceCategory;
+    key: string;
+    name: string;
+    file: File; // 添加文件字段
   };
 
   type Item = {
@@ -42,6 +38,10 @@ export declare namespace Source {
 
   type ItemsParams = {
     key: string;
+    sourceCategory: SourceCategory;
+  };
+
+  type HomeItemsParams = {
     sourceCategory: SourceCategory;
   };
 
