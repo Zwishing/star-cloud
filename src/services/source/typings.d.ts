@@ -2,6 +2,8 @@
 /* eslint-disable */
 
 export declare namespace Source {
+  type SourceCategory = 'vector' | 'imagery';
+
   type Upload = {
     bucket?: string;
     key?: string;
@@ -14,7 +16,7 @@ export declare namespace Source {
   };
 
   type Item = {
-    parentKey :string,
+    parentKey: string;
     name: string;
     key: string;
     type: 'file' | 'folder';
@@ -26,27 +28,27 @@ export declare namespace Source {
   type ItemsResp = {
     code: number;
     data: {
-      "key":string,
-      "items":Item[],
+      key: string;
+      items: Item[];
     };
     msg: string;
   };
-  
+
   type ItemResp = {
     code: number;
     data: Item;
     msg: string;
-  }
+  };
 
   type ItemsParams = {
     key: string;
-    sourceCategory: 'vector' | 'imagery';
+    sourceCategory: SourceCategory;
   };
-  
+
   type NewFolderReq = {
-    sourceCategory: 'vector' | 'imagery';
+    sourceCategory: SourceCategory;
     key: string;
     name: string;
     path: string;
-  }
+  };
 }

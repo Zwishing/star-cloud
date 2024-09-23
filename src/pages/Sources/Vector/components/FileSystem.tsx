@@ -143,7 +143,7 @@ const FileSystem = () => {
   };
 
   // 根据搜索关键词过滤数据的函数
-  const filteredData = (items: typings.API.Item[], keyword: string): typings.API.Item[] => {
+  const filteredData = (items , keyword: string) => {
     if (!keyword) return items; // 如果关键词为空，返回所有项
 
     return items.filter((item) => {
@@ -174,6 +174,8 @@ const FileSystem = () => {
       <FileList
         data={currentDir}
         currentPath={currentPath}
+        setData={setData}
+        setKey={setKey}
         setCurrentPath={setCurrentPath}
         setSelectedFile={setSelectedFile}
         setPublishModalVisible={setPublishModalVisible}

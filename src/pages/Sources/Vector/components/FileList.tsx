@@ -1,29 +1,34 @@
-import {  Checkbox, Col, Empty, List, Row, } from 'antd';
-import {
-  FolderOpenTwoTone,
-  FileTextTwoTone,
-} from '@ant-design/icons';
-import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { getSourceItems } from '@/services/source/files';
 import { Source } from '@/services/source/typings'; // 导入定义的类型
+import { FileTextTwoTone, FolderOpenTwoTone } from '@ant-design/icons';
+import { Checkbox, Col, Empty, List, Row } from 'antd';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useState } from 'react';
 import FileListActions from './FileListActions';
 
 const FileList = ({
   data,
   currentPath,
+  setData,
+  setKey,
   setCurrentPath,
   setSelectedFile,
   setPublishModalVisible,
   setDeleteModalVisible,
 }) => {
   const [selectedKey, setSelectedKey] = useState(null);
-  const [hoveredKey, setHoveredKey] = useState<string>("");
+  const [hoveredKey, setHoveredKey] = useState<string>('');
 
-  const renderListItem = (item:Source.Item) => {
-    const onItemClick = () => {
-      if (item.type === 'folder' && selectedKey !== item.key) {
-        
-        setCurrentPath([...currentPath, item.key]);
+  const renderListItem = (item: Source.Item) => {
+    const onItemClick = async () => {
+      if (item.type === 'folder') {
+        try {
+          const resp = await getSourceItems({ key: item.key, sourceCategory: 'vector' });
+          setData(resp.data.items); // 将获取的数据设置到状态中
+          setKey(resp.data.key);
+        } catch (error) {
+          console.error(error);
+        }
       }
     };
 
@@ -74,17 +79,17 @@ const FileList = ({
                 )}
               </Col>
               <Col>
-                {item.type === 'folder' ? <FolderOpenTwoTone/>:<FileTextTwoTone/>}{item.name}
+                {item.type === 'folder' ? <FolderOpenTwoTone /> : <FileTextTwoTone />}
+                {item.name}
               </Col>
             </Row>
           </Col>
           <Col flex="2">{item.size}</Col>
           <Col flex="3">{item.lastModified}</Col>
           <Col flex="2"></Col>
-          <Col flex="2">
-          </Col>
+          <Col flex="2"></Col>
         </Row>
-        {item.children && item.children.length === 0 && currentPath.includes(item.key) && (
+        {currentPath.includes(item.key) && (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="无数据" />
         )}
       </List.Item>

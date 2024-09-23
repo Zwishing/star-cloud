@@ -12,7 +12,11 @@ export async function getSourceItems(params: Source.ItemsParams, options?: { [p:
   });
 }
 
-export async function addSourceItem(params: Source.ItemsParams, body:Source.Item,options?: { [p: string]: any }) {
+export async function addSourceItem(
+  params: Source.ItemsParams,
+  body: Source.Item,
+  options?: { [p: string]: any },
+) {
   return request<Source.ItemsResp>(`/v1/source/${params.sourceCategory}/add`, {
     method: 'POST',
     params: {
@@ -26,8 +30,8 @@ export async function addSourceItem(params: Source.ItemsParams, body:Source.Item
   });
 }
 
-export async function newFolder(body:Source.NewFolderReq,options?: { [p: string]: any }) {
-  return request<Source.ItemResp>(`/v1/source/${body.sourceCategory}/new-folder`, {
+export async function newFolder(body: Source.NewFolderReq, options?: { [p: string]: any }) {
+  return request<Source.ItemResp>(`/v1/source/${body.sourceCategory}/newFolder`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
