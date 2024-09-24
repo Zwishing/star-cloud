@@ -1,32 +1,41 @@
+import { upload } from '@/services/source/files';
+import { Source } from '@/services/source/typings';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, Input, Modal, Progress, Upload, message } from 'antd';
-import { useState } from 'react';
+import type { UploadChangeParam, UploadFile } from 'antd/es/upload/interface';
+import React, { useState } from 'react';
+
+interface FileUploadModalProps {
+  visible: boolean;
+  keyId: string;
+  onCancel: () => void;
+}
 
 const { Dragger } = Upload;
 
-const FileUploadModal = ({ visible, onCancel, onUpload }) => {
-  const [fileList, setFileList] = useState([]);
-  const [fileName, setFileName] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+const FileUploadModal: React.FC<FileUploadModalProps> = ({ visible, keyId, onCancel }) => {
+  const [file, setFile] = useState<UploadFile | null>(null);
+  const [fileName, setFileName] = useState<string>('');
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
 
-  const handleFileChange = ({ file, fileList }) => {
-    setFileList(fileList);
-    if (fileList.length > 0) {
-      const currentFile = fileList[fileList.length - 1];
-      const nameWithoutExtension = currentFile.name.replace(/\.[^/.]+$/, '');
+  const handleFileChange = ({ file }: UploadChangeParam<UploadFile>) => {
+    if (file) {
+      setFile(file);
+      const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, '');
       setFileName(nameWithoutExtension);
     } else {
+      setFile(null);
       setFileName('');
     }
   };
 
-  const handleFileNameChange = (e) => {
+  const handleFileNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileName(e.target.value);
   };
 
-  const handleUpload = () => {
-    if (fileList.length === 0) {
+  const handleUpload = async () => {
+    if (!file) {
       message.error('请选择文件');
       return;
     }
@@ -36,33 +45,48 @@ const FileUploadModal = ({ visible, onCancel, onUpload }) => {
       return;
     }
 
-    const formData = new FormData();
-    fileList.forEach((file) => {
-      formData.append('files', file.originFileObj);
-    });
-    formData.append('fileName', fileName);
+    const fileObject = file.originFileObj; // This is of type RcFile | undefined
+    if (fileObject) {
+      const uploadReq: Source.UploadReq = {
+        sourceCategory: 'vector',
+        key: keyId,
+        name: fileName,
+        file: fileObject,
+      };
+      setUploading(true);
+      setProgress(0);
+      try {
+        const controller = new AbortController();
+        const { signal } = controller;
 
-    setUploading(true);
-    setProgress(0);
+        const uploadPromise = upload(uploadReq, {
+          signal,
+          onUploadProgress: (event: ProgressEvent) => {
+            if (event.lengthComputable) {
+              const percent = Math.round((event.loaded / event.total) * 100);
+              setProgress(percent);
+            }
+          },
+        });
 
-    // Simulating upload process
-    onUpload(formData)
-      .then(() => {
+        await uploadPromise;
+
         setUploading(false);
         setProgress(100);
-        setFileList([]);
-        setFileName('');
         message.success('文件上传成功');
-      })
-      .catch(() => {
+      } catch (error) {
         setUploading(false);
         setProgress(0);
         message.error('文件上传失败');
-      });
+      }
+    } else {
+      message.error('文件对象不可用');
+      return;
+    }
   };
 
-  const beforeUpload = (file) => {
-    const accept = '.zip,.geojson,.tif,.tiff,.img,.las';
+  const beforeUpload = (file: UploadFile) => {
+    const accept = '.zip,.geojson';
     const isFileTypeValid = accept
       .split(',')
       .some((type) => file.name.toLowerCase().endsWith(type));
@@ -85,7 +109,7 @@ const FileUploadModal = ({ visible, onCancel, onUpload }) => {
           key="upload"
           type="primary"
           onClick={handleUpload}
-          disabled={fileList.length === 0 || !fileName.trim() || uploading}
+          disabled={!file || !fileName.trim() || uploading}
         >
           上传
         </Button>,
@@ -99,18 +123,18 @@ const FileUploadModal = ({ visible, onCancel, onUpload }) => {
       />
       <Dragger
         accept=".zip,.geojson,.tif,.tiff,.img,.las"
-        fileList={fileList}
+        fileList={file ? [{ ...file, percent: progress }] : []} // Show upload progress
         onChange={handleFileChange}
         beforeUpload={beforeUpload}
-        showUploadList={true}
-        maxCount={1}
+        showUploadList={true} // Enable upload list display
+        multiple={false} // Ensure only one file can be uploaded
       >
         <p className="ant-upload-drag-icon">
           <UploadOutlined />
         </p>
         <p className="ant-upload-text">点击或拖拽文件到此区域进行上传</p>
         <p className="ant-upload-hint">
-          支持单个或批量上传。严禁上传公司数据或其他带有敏感信息的文件
+          支持单个文件上传。严禁上传公司数据或其他带有敏感信息的文件
         </p>
       </Dragger>
       {uploading && <Progress percent={progress} style={{ marginTop: 16 }} />}

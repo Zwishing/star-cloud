@@ -57,3 +57,13 @@ export async function upload(body: Source.UploadReq, options?: { [p: string]: an
     ...(options || {}),
   });
 }
+
+export async function deleteItems(params: Source.DeleteItems, options?: { [p: string]: any }) {
+  return request<Source.ItemsResp>(`/v1/source/${params.sourceCategory}/deleteItems`, {
+    method: 'DELETE',
+    params: {
+      key: params.key.join(','), // 将数组转为以逗号分隔的字符串
+    },
+    ...(options || {}),
+  });
+}

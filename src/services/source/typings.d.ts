@@ -41,6 +41,11 @@ export declare namespace Source {
     sourceCategory: SourceCategory;
   };
 
+  type DeleteItems = {
+    key: string[];
+    sourceCategory: SourceCategory;
+  };
+
   type HomeItemsParams = {
     sourceCategory: SourceCategory;
   };

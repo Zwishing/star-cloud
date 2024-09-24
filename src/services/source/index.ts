@@ -2,11 +2,19 @@
 /* eslint-disable */
 // API 更新时间：
 // API 唯一标识：
-import { getHomeItems, getNextItems, getPreviousItems, newFolder, upload } from './files';
+import {
+  deleteItems,
+  getHomeItems,
+  getNextItems,
+  getPreviousItems,
+  newFolder,
+  upload,
+} from './files';
 export default {
   getNextItems,
   getPreviousItems,
   getHomeItems,
   newFolder,
   upload,
+  deleteItems,
 };

@@ -1,4 +1,4 @@
-import { getHomeItems, getPreviousItems, newFolder } from '@/services/source/files'; // 导入获取数据的服务函数
+import { deleteItems, getHomeItems, getPreviousItems, newFolder } from '@/services/source/files'; // 导入获取数据的服务函数
 import { Source } from '@/services/source/typings'; // 导入定义的类型
 import { message } from 'antd';
 import { useEffect, useState } from 'react';
@@ -15,7 +15,7 @@ const FileSystem = () => {
   const [newFolderName, setNewFolderName] = useState(''); // 新文件夹名称
   const [_, setPublishModalVisible] = useState(false); // 发布模态框可见状态
   const [deleteModalVisible, setDeleteModalVisible] = useState(false); // 删除模态框可见状态
-  const [selectedFile, setSelectedFile] = useState<Source.Item | null>(null); // 选中的文件状态
+  const [selectedFile, setSelectedFile] = useState<string[]>([]); // 选中的文件状态
   const [searchKeyword, setSearchKeyword] = useState(''); // 搜索关键词状态
   const [uploadModalVisible, setUploadModalVisible] = useState(false); // 上传模态框可见状态
   const [uploads, setUploads] = useState<any[]>([]);
@@ -44,27 +44,6 @@ const FileSystem = () => {
   // 处理添加文件夹的函数
   const handleAddFolder = () => {
     setModalVisible(true); // 显示添加文件夹的模态框
-  };
-
-  // 处理上传文件的函数
-  const handleUpload = ({ name, formData }: { name: string; formData: FormData }) => {
-    const upload = { name, progress: 0 }; // 初始化上传对象，包含名称和进度
-    setUploads([...uploads, upload]); // 添加新的上传对象到上传数组中
-
-    // 模拟上传进度
-    const interval = setInterval(() => {
-      setUploads((prevUploads) => {
-        // 更新上传数组中的进度
-        const updatedUploads = prevUploads.map((item) =>
-          item.name === name ? { ...item, progress: item.progress + 10 } : item,
-        );
-        // 如果上传完成，清除定时器
-        if (updatedUploads.find((item) => item.name === name).progress >= 100) {
-          clearInterval(interval);
-        }
-        return updatedUploads; // 返回更新后的上传数组
-      });
-    }, 500); // 模拟的上传间隔时间
   };
 
   // 处理添加文件夹模态框中确定按钮的函数
@@ -114,16 +93,24 @@ const FileSystem = () => {
   };
 
   // 处理删除模态框中确定按钮的函数
-  const handleDeleteOk = () => {
+  const handleDeleteOk = async () => {
     const newData = [...data]; // 创建数据副本
-    let currentDir = newData;
-
-    // 在当前目录中找到选中文件的索引并删除
-    const index = currentDir.findIndex((item) => item.key === selectedFile?.key);
-    currentDir.splice(index, 1);
-
-    setData(newData); // 更新状态中的数据
     setDeleteModalVisible(false); // 隐藏删除模态框
+
+    const resp = await deleteItems({ key: selectedFile, sourceCategory: 'vector' });
+
+    if (resp.code === 200) {
+      // 遍历 selectedFile 中的每个 key
+      selectedFile.forEach((fileKey) => {
+        const index = newData.findIndex((item) => item.key === fileKey);
+        if (index !== -1) {
+          newData.splice(index, 1); // 找到并删除文件
+        }
+      });
+
+      setData(newData); // 更新状态中的数据
+      setSelectedFile([]); // 清空选中的文件
+    }
   };
 
   // 处理删除模态框中取消按钮的函数
@@ -214,8 +201,8 @@ const FileSystem = () => {
       {/* 渲染FileUploadModal组件，并传递props */}
       <FileUploadModal
         visible={uploadModalVisible}
+        keyId={key}
         onCancel={() => setUploadModalVisible(false)}
-        onUpload={handleUpload}
       />
     </div>
   );

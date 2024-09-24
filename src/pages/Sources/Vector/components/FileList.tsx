@@ -1,10 +1,11 @@
 import { FolderIcon } from '@/components/Icon';
 import { getNextItems } from '@/services/source/files';
-import { Source } from '@/services/source/typings'; // 导入定义的类型
+import { Source } from '@/services/source/typings'; // Import defined types
 import { FileTextTwoTone } from '@ant-design/icons';
-import { Checkbox, Col, Empty, List, Row } from 'antd';
+import { Checkbox, Empty, Space, Table } from 'antd';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useState } from 'react';
+import './FileList.css';
 import FileListActions from './FileListActions';
 
 const FileList = ({
@@ -17,116 +18,87 @@ const FileList = ({
   setPublishModalVisible,
   setDeleteModalVisible,
 }) => {
-  const [selectedKey, setSelectedKey] = useState(null);
-  const [hoveredKey, setHoveredKey] = useState<string>('');
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  const renderListItem = (item: Source.Item) => {
-    const onItemClick = async () => {
-      if (item.type === 'folder') {
-        try {
-          const resp = await getNextItems({ key: item.key, sourceCategory: 'vector' });
-          setData(resp.data.items); // 将获取的数据设置到状态中
-          setKey(item.key);
-          setCurrentPath((currentPath: string[]) => [...currentPath, item.key]);
-        } catch (error) {
-          console.error(error);
-        }
+  const handleRowClick = async (item: Source.Item) => {
+    if (item.type === 'folder') {
+      try {
+        const resp = await getNextItems({ key: item.key, sourceCategory: 'vector' });
+        setData(resp.data.items); // Set fetched data to state
+        setKey(item.key);
+        setCurrentPath((prevPath: string[]) => [...prevPath, item.key]);
+      } catch (error) {
+        console.error(error);
       }
-    };
-
-    const showPublishModal = (e: { stopPropagation: () => void }) => {
-      e.stopPropagation();
-      setSelectedFile(item);
-      setPublishModalVisible(true);
-    };
-
-    const showDeleteModal = (e: { stopPropagation: () => void }) => {
-      e.stopPropagation();
-      setSelectedFile(item);
-      setDeleteModalVisible(true);
-    };
-
-    const handleCheckedChange = (e: CheckboxChangeEvent) => {
-      // e.stopPropagation(); // 阻止事件冒泡
-      const { value } = e.target;
-      setSelectedKey((prevKey) => (prevKey === value ? null : value));
-      setSelectedFile((prevItem: { key: any }) => (prevItem?.key === item.key ? null : item));
-    };
-
-    return (
-      <List.Item
-        key={item.key}
-        onClick={onItemClick}
-        style={{
-          cursor: 'pointer',
-          background:
-            selectedKey === item.key ? '#e6f7ff' : hoveredKey === item.key ? '#f0f0f0' : 'inherit',
-        }}
-        onMouseEnter={() => setHoveredKey(item.key)}
-        onMouseLeave={() => setHoveredKey('')}
-      >
-        <Row gutter={16} style={{ width: '100%' }}>
-          <Col flex="3">
-            <Row align="middle">
-              <Col style={{ width: 32 }}>
-                {hoveredKey === item.key || selectedKey === item.key ? (
-                  <Checkbox
-                    checked={selectedKey === item.key}
-                    onChange={(e) => handleCheckedChange(e)}
-                    value={item.key}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <div style={{ width: 32 }} />
-                )}
-              </Col>
-              <Col>
-                {item.type === 'folder' ? <FolderIcon /> : <FileTextTwoTone />}
-
-                {item.name}
-              </Col>
-            </Row>
-          </Col>
-          <Col flex="2">{item.size}</Col>
-          <Col flex="3">{item.lastModified}</Col>
-          <Col flex="2"></Col>
-          <Col flex="2"></Col>
-        </Row>
-        {currentPath.includes(item.key) && (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="无数据" />
-        )}
-      </List.Item>
-    );
+    }
   };
+
+  const handleCheckedChange = (e: CheckboxChangeEvent, item: Source.Item) => {
+    const { value } = e.target;
+    setSelectedKey((prevKey) => (prevKey === value ? null : value));
+    // 根据选中状态，更新 selectedFile
+    if (value) {
+      // 如果选中，添加 key 到 selectedFile
+      setSelectedFile((prev: string[]) => [item.key]);
+    }
+  };
+
+  const columns = [
+    {
+      title: '',
+      dataIndex: 'key',
+      width: 10,
+      align: 'center',
+      render: (key: string, item: Source.Item) => (
+        <Checkbox
+          checked={selectedKey === key}
+          onChange={(e) => handleCheckedChange(e, item)}
+          value={key}
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    },
+    {
+      title: '名称',
+      dataIndex: 'name',
+      render: (name: string, item: Source.Item) => (
+        <Space onClick={() => handleRowClick(item)} style={{ cursor: 'pointer' }}>
+          {item.type === 'folder' ? <FolderIcon /> : <FileTextTwoTone />}
+          {name}
+        </Space>
+      ),
+    },
+    {
+      title: '大小',
+      dataIndex: 'size',
+      render: (size: number) => `${(size / 1024 / 1024).toFixed(2)} MB`,
+    },
+    {
+      title: '修改日期',
+      dataIndex: 'lastModified',
+    },
+  ];
 
   return (
     <>
-      <List
-        size="large"
-        header={
-          <div
-            style={{
-              fontWeight: 'bold',
-            }}
-          >
-            <Row gutter={16} justify="center" align="middle">
-              <Col flex="3">名称</Col>
-              <Col flex="2">大小</Col>
-              <Col flex="3">修改日期</Col>
-              <Col flex="2"></Col>
-              <Col flex="2"></Col>
-            </Row>
-          </div>
-        }
-        bordered
-        itemLayout="horizontal"
+      <Table
+        rowKey="key"
+        columns={columns}
         dataSource={data}
-        renderItem={renderListItem}
+        pagination={false}
+        style={{
+          borderRadius: '12px', // Adjust the overall table border-radius
+          overflow: 'hidden', // Ensure the corners are rounded properly
+        }}
+        // rowClassName={(record, index) => (index % 2 === 0 ? 'even-row' : 'odd-row')}
+        locale={{
+          emptyText: <Empty description="无数据" />,
+        }}
       />
       {selectedKey && (
         <FileListActions
           showPublishModal={undefined}
-          showDeleteModal={undefined}
+          showDeleteModal={setDeleteModalVisible}
           handleCancelSelection={undefined}
         />
       )}
