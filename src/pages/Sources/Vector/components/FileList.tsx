@@ -1,10 +1,9 @@
-import { FolderIcon } from '@/components/Icon';
+import { FolderIcon, ZipIcon } from '@/components/Icon'; // Import the required icons
 import { getNextItems } from '@/services/source/files';
-import { Source } from '@/services/source/typings'; // Import defined types
+import { Source } from '@/services/source/typings';
 import { FileTextTwoTone } from '@ant-design/icons';
-import { Checkbox, Empty, Space, Table } from 'antd';
-import { CheckboxChangeEvent } from 'antd/es/checkbox';
-import { useState } from 'react';
+import { Button, Empty, Space, Table } from 'antd';
+import { useEffect, useState } from 'react';
 import './FileList.css';
 import FileListActions from './FileListActions';
 
@@ -18,13 +17,18 @@ const FileList = ({
   setPublishModalVisible,
   setDeleteModalVisible,
 }) => {
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Update selected files based on selectedRowKeys
+    setSelectedFile(selectedRowKeys);
+  }, [selectedRowKeys, setSelectedFile]);
 
   const handleRowClick = async (item: Source.Item) => {
     if (item.type === 'folder') {
       try {
         const resp = await getNextItems({ key: item.key, sourceCategory: 'vector' });
-        setData(resp.data.items); // Set fetched data to state
+        setData(resp.data.items);
         setKey(item.key);
         setCurrentPath((prevPath: string[]) => [...prevPath, item.key]);
       } catch (error) {
@@ -33,69 +37,104 @@ const FileList = ({
     }
   };
 
-  const handleCheckedChange = (e: CheckboxChangeEvent, item: Source.Item) => {
-    const { value } = e.target;
-    setSelectedKey((prevKey) => (prevKey === value ? null : value));
-    // 根据选中状态，更新 selectedFile
-    if (value) {
-      // 如果选中，添加 key 到 selectedFile
-      setSelectedFile((prev: string[]) => [item.key]);
+  // Function to format file size
+  const formatFileSize = (size: number) => {
+    if (size === 0) return '0 KB';
+    if (size >= 1024 * 1024 * 1024) {
+      return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+    } else if (size >= 1024 * 1024) {
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    } else {
+      return `${(size / 1024).toFixed(1)} KB`;
     }
   };
 
+  // Function to determine the icon based on file type
+  const getIconByFileType = (item: Source.Item) => {
+    if (item.type === 'folder') {
+      return <FolderIcon />;
+    }
+    const fileExtension = item.name.split('.').pop()?.toLowerCase();
+    if (fileExtension === 'zip') {
+      return <ZipIcon />;
+    }
+    // Add more conditions for different file types and return respective icons
+    // Example:
+    if (fileExtension === 'txt') {
+      return <OtherFileIcon />; // Replace with the appropriate icon for .txt files
+    }
+    return <FileTextTwoTone />; // Default icon for other file types
+  };
+
   const columns = [
-    {
-      title: '',
-      dataIndex: 'key',
-      width: 10,
-      align: 'center',
-      render: (key: string, item: Source.Item) => (
-        <Checkbox
-          checked={selectedKey === key}
-          onChange={(e) => handleCheckedChange(e, item)}
-          value={key}
-          onClick={(e) => e.stopPropagation()}
-        />
-      ),
-    },
     {
       title: '名称',
       dataIndex: 'name',
       render: (name: string, item: Source.Item) => (
         <Space onClick={() => handleRowClick(item)} style={{ cursor: 'pointer' }}>
-          {item.type === 'folder' ? <FolderIcon /> : <FileTextTwoTone />}
+          {getIconByFileType(item)}
           {name}
         </Space>
       ),
+      sorter: (a: Source.Item, b: Source.Item) => a.name.localeCompare(b.name),
     },
     {
       title: '大小',
       dataIndex: 'size',
-      render: (size: number) => `${(size / 1024 / 1024).toFixed(2)} MB`,
+      render: (size: number) => formatFileSize(size),
+      sorter: (a: Source.Item, b: Source.Item) => a.size - b.size,
     },
     {
       title: '修改日期',
       dataIndex: 'lastModified',
+      sorter: (a: Source.Item, b: Source.Item) =>
+        new Date(a.lastModified).getTime() - new Date(b.lastModified).getTime(),
     },
   ];
 
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (newSelectedRowKeys: React.Key[]) => {
+      setSelectedRowKeys(newSelectedRowKeys as string[]);
+    },
+  };
+
+  const handleClearSelection = () => {
+    setSelectedRowKeys([]);
+  };
+
   return (
     <>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
+        {selectedRowKeys.length > 0 && <span>选中 {selectedRowKeys.length} 项</span>}
+        {selectedRowKeys.length > 0 && (
+          <Button type="link" onClick={handleClearSelection}>
+            清除选择
+          </Button>
+        )}
+      </div>
       <Table
         rowKey="key"
         columns={columns}
         dataSource={data}
         pagination={false}
+        rowSelection={rowSelection}
         style={{
-          borderRadius: '12px', // Adjust the overall table border-radius
-          overflow: 'hidden', // Ensure the corners are rounded properly
+          borderRadius: '12px',
+          overflow: 'hidden',
         }}
-        // rowClassName={(record, index) => (index % 2 === 0 ? 'even-row' : 'odd-row')}
         locale={{
           emptyText: <Empty description="无数据" />,
         }}
       />
-      {selectedKey && (
+      {selectedRowKeys.length > 0 && (
         <FileListActions
           showPublishModal={undefined}
           showDeleteModal={setDeleteModalVisible}

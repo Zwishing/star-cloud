@@ -17,7 +17,7 @@ const TifIcon: React.FC = () => {
 };
 
 const ZipIcon: React.FC = () => {
-  return <img src={zip} width="24" height="24" alt="ZIP Icon" />;
+  return <img src={zip} width="20" height="20" alt="ZIP Icon" />;
 };
 
 // 导出所有图标组件
