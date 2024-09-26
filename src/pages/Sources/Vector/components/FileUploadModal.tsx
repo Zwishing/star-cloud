@@ -79,7 +79,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ visible, keyId, onCan
       const newUploadItem: UploadItem = {
         key: fileName, // Use fileName as key (ensure it's unique)
         fileName: fileName,
-        fileSize: file.size, // Size of the file
+        fileSize: fileObject.size, // Size of the file
         progress: 0,
         status: 'uploading',
         uploadTime: 0, // Initialize upload time
@@ -255,7 +255,11 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ visible, keyId, onCan
         rowKey="key" // Specify unique key for each row
         components={{
           header: {
-            cell: (props) => <th style={{ height: '32px', lineHeight: '32px' }} {...props} />,
+            cell: (
+              props: React.JSX.IntrinsicAttributes &
+                React.ClassAttributes<HTMLTableHeaderCellElement> &
+                React.ThHTMLAttributes<HTMLTableHeaderCellElement>,
+            ) => <th style={{ height: '32px', lineHeight: '32px' }} {...props} />,
           },
         }}
       />

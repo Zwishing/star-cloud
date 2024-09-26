@@ -7,12 +7,22 @@ import { useEffect, useState } from 'react';
 import './FileList.css';
 import FileListActions from './FileListActions';
 
-const FileList = ({
+interface FileListProps {
+  data: Source.Item[];
+  setData: (items: Source.Item[]) => void;
+  currentPath: string[];
+  setCurrentPath: (path: string[]) => void;
+  setKey: (key: string) => void;
+  setSelectedFile: (files: string[]) => void;
+  setDeleteModalOpen: () => void;
+}
+
+const FileList: React.FC<FileListProps> = ({
   data,
-  currentPath,
   setData,
-  setKey,
+  currentPath,
   setCurrentPath,
+  setKey,
   setSelectedFile,
   // setPublishModalVisible,
   setDeleteModalOpen,
@@ -30,7 +40,7 @@ const FileList = ({
         const resp = await getNextItems({ key: item.key, sourceCategory: 'vector' });
         setData(resp.data.items);
         setKey(item.key);
-        setCurrentPath((prevPath: string[]) => [...prevPath, item.key]);
+        setCurrentPath([...currentPath, item.key]);
       } catch (error) {
         console.error(error);
       }
@@ -59,7 +69,7 @@ const FileList = ({
       return <ZipIcon />;
     }
     // Add more conditions for different file types and return respective icons
-  
+
     return <FileTextTwoTone />; // Default icon for other file types
   };
 

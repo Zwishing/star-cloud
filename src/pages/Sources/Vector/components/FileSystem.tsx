@@ -1,5 +1,6 @@
-import { deleteItems, getHomeItems, getPreviousItems, newFolder } from '@/services/source/files'; // 导入获取数据的服务函数
-import { Source } from '@/services/source/typings'; // 导入定义的类型
+import { deleteItems, getHomeItems, getPreviousItems, newFolder } from '@/services/source/files';
+import { Source } from '@/services/source/typings';
+import { useBoolean, useRequest } from 'ahooks';
 import { message } from 'antd';
 import { useEffect, useState } from 'react';
 import DeleteModal from './DeleteModal';
@@ -7,123 +8,118 @@ import FileList from './FileList';
 import FileSystemHeader from './FileSystemHeader';
 import FileUploadModal from './FileUploadModal';
 import FolderModal from './FolderModal';
-import { useBoolean } from 'ahooks';
 
-const FileSystem:React.FC = () => {
-  // 状态变量
-  const [currentPath, setCurrentPath] = useState<string[]>(['']); // 当前路径数组
-  
-  const [folderModalVisible,{setTrue:setFolderModalOpen,setFalse:setFolderModalClose}] = useBoolean(false); // 模态框可见状态
-  const [uploadModalVisible, { setTrue:setUploadModalOpen,setFalse:setUploadModalClose }] = useBoolean(false); // 上传模态框可见状态
-  const [deleteModalVisible, { setTrue:setDeleteModalOpen,setFalse:setDeleteModalClose }] = useBoolean(false); // 删除模态框可见状态
-  const [newFolderName, setNewFolderName] = useState(''); // 新文件夹名称
-  // const [_, setPublishModalVisible] = useState(false); // 发布模态框可见状态
-  
-  const [selectedFile, setSelectedFile] = useState<string[]>([]); // 选中的文件状态
-  const [searchKeyword, setSearchKeyword] = useState(''); // 搜索关键词状态
-  // const [uploadModalVisible, setUploadModalVisible] = useState(false); // 上传模态框可见状态
-  const [uploads, setUploads] = useState<any[]>([]);
-  const [key, setKey] = useState<string>(''); // 上传文件状态数组
+const FileSystem: React.FC = () => {
+  const [currentPath, setCurrentPath] = useState<string[]>(['']);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [selectedFile, setSelectedFile] = useState<string[]>([]);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [key, setKey] = useState<string>('');
   const [path, setPath] = useState<string>('/vector');
 
-  // 用于存储从API获取的数据
+  const [folderModalVisible, { setTrue: setFolderModalOpen, setFalse: setFolderModalClose }] =
+    useBoolean(false);
+  const [uploadModalVisible, { setTrue: setUploadModalOpen, setFalse: setUploadModalClose }] =
+    useBoolean(false);
+  const [deleteModalVisible, { setTrue: setDeleteModalOpen, setFalse: setDeleteModalClose }] =
+    useBoolean(false);
+
   const [data, setData] = useState<Source.Item[]>([]);
 
-  const fetchHomeData = async () => {
-    try {
-      const resp = await getHomeItems({ sourceCategory: 'vector' }); // 调用获取数据的函数
-      setData(resp.data.items); // 将获取的数据设置到状态中
-      setKey(resp.data.key);
-      setCurrentPath(() => [resp.data.key]);
-    } catch (error) {
-      console.error('获取数据出错:', error); // 如果获取数据失败，输出错误信息
-    }
-  };
+  // Fetch home data
+  const { run: fetchHomeData } = useRequest(() => getHomeItems({ sourceCategory: 'vector' }), {
+    manual: true,
+    onSuccess: (result) => {
+      setKey(result.data.key);
+      setCurrentPath([result.data.key]);
+      setData(result.data.items); // Update the data state here
+    },
+    onError: (err) => {
+      console.error('获取数据出错:', err.message);
+    },
+  });
 
-  // useEffect钩子，在组件挂载时获取数据
-  useEffect(() => {
-    fetchHomeData(); // 调用获取数据的函数
-  }, []); // 空依赖数组确保仅在组件挂载时执行一次
-
-  // 处理添加文件夹模态框中确定按钮的函数
-  const handleOkNewFolder = async () => {
-    if (newFolderName.trim()) {
-      const newData = [...data]; // 创建数据副本
-      const folder: Source.NewFolderReq = {
-        sourceCategory: 'vector',
-        key: key,
-        name: newFolderName,
-        path: `${path}/${newFolderName}`,
-      };
-
-      setNewFolderName(''); // 清空新文件夹名称输入框
-      setFolderModalClose();
-      try {
-        const item = await newFolder(folder);
-        if (item.code === 200) {
-          // 将新文件夹添加到当前目录
-          newData.push(item.data);
-          setData(newData);
-        }
-      } catch (error) {
-        message.error('文件夹创建失败');
-      }
-    } else {
-      message.error('文件夹名称不能为空'); // 如果文件夹名称为空，显示错误消息
-    }
-  };
-
-
-
-  // 处理删除模态框中确定按钮的函数
-  const handleDeleteOk = async () => {
-    const newData = [...data]; // 创建数据副本
-    setDeleteModalClose() // 隐藏删除模态框
-
-    const resp = await deleteItems({ key: selectedFile, sourceCategory: 'vector' });
-
-    if (resp.code === 200) {
-      // 遍历 selectedFile 中的每个 key
-      selectedFile.forEach((fileKey) => {
-        const index = newData.findIndex((item) => item.key === fileKey);
-        if (index !== -1) {
-          newData.splice(index, 1); // 找到并删除文件
-        }
-      });
-
-      setData(newData); // 更新状态中的数据
-      setSelectedFile([]); // 清空选中的文件
-    }
-  };
-
-  // 处理返回按钮的函数
-  const handleBackButtonClick = async () => {
-    try {
-      const resp = await getPreviousItems({ key: key, sourceCategory: 'vector' });
+  // Fetch previous items
+  const { run: fetchPreviousItems } = useRequest((params) => getPreviousItems(params), {
+    manual: true,
+    onSuccess: (resp) => {
       if (resp.code === 200) {
-        setData(resp.data.items); // 将获取的数据设置到状态中
-        setKey(resp.data.key);
-        setCurrentPath((currentDir) => {
-          const newDir = [...currentDir]; // 创建当前目录的副本
+        setData(resp.data.items);
+        setCurrentPath((prev) => {
+          const newDir = [...prev];
           newDir.pop();
           return newDir;
         });
       }
-    } catch (error) {
-      console.error('获取数据出错:', error); // 如果获取数据失败，输出错误信息
+    },
+    onError: (err) => {
+      console.error('获取数据出错:', err);
+    },
+  });
+
+  // Create new folder
+  const { run: createNewFolder } = useRequest((folder) => newFolder(folder), {
+    manual: true,
+    onSuccess: (item) => {
+      if (item.code === 200) {
+        setData((prevData) => [...prevData, item.data]); // Update the data state
+      }
+    },
+    onError: () => {
+      message.error('文件夹创建失败');
+    },
+  });
+
+  // Delete items
+  const { run: handleDeleteItems } = useRequest((params) => deleteItems(params), {
+    manual: true,
+    onSuccess: (resp) => {
+      if (resp.code === 200) {
+        setData((prevData) => prevData.filter((item) => !selectedFile.includes(item.key)));
+        setSelectedFile([]);
+      }
+      setDeleteModalClose();
+    },
+    onError: () => {
+      message.error('删除失败');
+    },
+  });
+
+  const handleOkNewFolder = () => {
+    if (newFolderName.trim()) {
+      const folder: Source.NewFolderReq = {
+        sourceCategory: 'vector',
+        key,
+        name: newFolderName,
+        path: `${path}/${newFolderName}`,
+      };
+
+      setNewFolderName('');
+      setFolderModalClose();
+      createNewFolder(folder); // Trigger new folder creation
+    } else {
+      message.error('文件夹名称不能为空');
     }
   };
 
-  // 处理主页按钮的函数（重置当前路径）
-  const handleHomeButtonClick = () => {
-    fetchHomeData(); // 调用获取数据的函数
+  const handleDeleteOk = () => {
+    handleDeleteItems({ key: selectedFile, sourceCategory: 'vector' }); // Trigger deletion
   };
 
+  const handleBackButtonClick = () => {
+    fetchPreviousItems({ key, sourceCategory: 'vector' }); // Call fetchPreviousItems with parameters
+  };
 
-  // 渲染FileSystem组件的JSX
+  const handleHomeButtonClick = () => {
+    fetchHomeData(); // Fetch home data
+  };
+
+  useEffect(() => {
+    fetchHomeData(); // Fetch initial home data
+  }, []);
+
   return (
     <div>
-      {/* 渲染FileSystemHeader组件，并传递props */}
       <FileSystemHeader
         currentPath={currentPath}
         handleHomeButtonClick={handleHomeButtonClick}
@@ -133,20 +129,15 @@ const FileSystem:React.FC = () => {
         searchKeyword={searchKeyword}
         setSearchKeyword={setSearchKeyword}
       />
-
-      {/* 渲染FileList组件，并传递props */}
       <FileList
         data={data}
         currentPath={currentPath}
-        setData={setData}
-        setKey={setKey}
-        setCurrentPath={setCurrentPath}
+        setData={setData} // Pass setData to child for updates
         setSelectedFile={setSelectedFile}
-        // setPublishModalVisible={setPublishModalVisible}
         setDeleteModalOpen={setDeleteModalOpen}
+        setCurrentPath={setCurrentPath}
+        setKey={setKey}
       />
-
-      {/* 渲染FolderModal组件，并传递props */}
       <FolderModal
         visible={folderModalVisible}
         handleOk={handleOkNewFolder}
@@ -154,21 +145,13 @@ const FileSystem:React.FC = () => {
         newFolderName={newFolderName}
         setNewFolderName={setNewFolderName}
       />
-
-      {/* 渲染DeleteModal组件，并传递props */}
       <DeleteModal
         visible={deleteModalVisible}
         handleOk={handleDeleteOk}
         handleCancel={setDeleteModalClose}
         selectedFile={selectedFile}
       />
-
-      {/* 渲染FileUploadModal组件，并传递props */}
-      <FileUploadModal
-        visible={uploadModalVisible}
-        keyId={key}
-        onCancel={setUploadModalClose}
-      />
+      <FileUploadModal visible={uploadModalVisible} keyId={key} onCancel={setUploadModalClose} />
     </div>
   );
 };
