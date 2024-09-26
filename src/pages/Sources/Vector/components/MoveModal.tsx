@@ -197,7 +197,7 @@ const MoveModal = ({ visible, onCancel, onMove }) => {
   return (
     <Modal
       title="移动到"
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       footer={[
         <Row justify={'space-between'} key="footer-row">

@@ -7,17 +7,21 @@ import FileList from './FileList';
 import FileSystemHeader from './FileSystemHeader';
 import FileUploadModal from './FileUploadModal';
 import FolderModal from './FolderModal';
+import { useBoolean } from 'ahooks';
 
-const FileSystem = () => {
+const FileSystem:React.FC = () => {
   // 状态变量
   const [currentPath, setCurrentPath] = useState<string[]>(['']); // 当前路径数组
-  const [modalVisible, setModalVisible] = useState(false); // 模态框可见状态
+  
+  const [folderModalVisible,{setTrue:setFolderModalOpen,setFalse:setFolderModalClose}] = useBoolean(false); // 模态框可见状态
+  const [uploadModalVisible, { setTrue:setUploadModalOpen,setFalse:setUploadModalClose }] = useBoolean(false); // 上传模态框可见状态
+  const [deleteModalVisible, { setTrue:setDeleteModalOpen,setFalse:setDeleteModalClose }] = useBoolean(false); // 删除模态框可见状态
   const [newFolderName, setNewFolderName] = useState(''); // 新文件夹名称
-  const [_, setPublishModalVisible] = useState(false); // 发布模态框可见状态
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false); // 删除模态框可见状态
+  // const [_, setPublishModalVisible] = useState(false); // 发布模态框可见状态
+  
   const [selectedFile, setSelectedFile] = useState<string[]>([]); // 选中的文件状态
   const [searchKeyword, setSearchKeyword] = useState(''); // 搜索关键词状态
-  const [uploadModalVisible, setUploadModalVisible] = useState(false); // 上传模态框可见状态
+  // const [uploadModalVisible, setUploadModalVisible] = useState(false); // 上传模态框可见状态
   const [uploads, setUploads] = useState<any[]>([]);
   const [key, setKey] = useState<string>(''); // 上传文件状态数组
   const [path, setPath] = useState<string>('/vector');
@@ -41,11 +45,6 @@ const FileSystem = () => {
     fetchHomeData(); // 调用获取数据的函数
   }, []); // 空依赖数组确保仅在组件挂载时执行一次
 
-  // 处理添加文件夹的函数
-  const handleAddFolder = () => {
-    setModalVisible(true); // 显示添加文件夹的模态框
-  };
-
   // 处理添加文件夹模态框中确定按钮的函数
   const handleOkNewFolder = async () => {
     if (newFolderName.trim()) {
@@ -58,7 +57,7 @@ const FileSystem = () => {
       };
 
       setNewFolderName(''); // 清空新文件夹名称输入框
-      setModalVisible(false); // 隐藏模态框
+      setFolderModalClose();
       try {
         const item = await newFolder(folder);
         if (item.code === 200) {
@@ -74,28 +73,12 @@ const FileSystem = () => {
     }
   };
 
-  // 处理取消按钮的函数
-  const handleCancel = () => {
-    setModalVisible(false); // 隐藏模态框
-  };
 
-  // 处理发布模态框中确定按钮的函数
-  const handlePublishOk = () => {
-    if (selectedFile) {
-      message.success(`文件 ${selectedFile.name} 已发布`); // 显示成功发布的消息
-    }
-    setPublishModalVisible(false); // 隐藏发布模态框
-  };
-
-  // 处理发布模态框中取消按钮的函数
-  const handlePublishCancel = () => {
-    setPublishModalVisible(false); // 隐藏发布模态框
-  };
 
   // 处理删除模态框中确定按钮的函数
   const handleDeleteOk = async () => {
     const newData = [...data]; // 创建数据副本
-    setDeleteModalVisible(false); // 隐藏删除模态框
+    setDeleteModalClose() // 隐藏删除模态框
 
     const resp = await deleteItems({ key: selectedFile, sourceCategory: 'vector' });
 
@@ -111,11 +94,6 @@ const FileSystem = () => {
       setData(newData); // 更新状态中的数据
       setSelectedFile([]); // 清空选中的文件
     }
-  };
-
-  // 处理删除模态框中取消按钮的函数
-  const handleDeleteCancel = () => {
-    setDeleteModalVisible(false); // 隐藏删除模态框
   };
 
   // 处理返回按钮的函数
@@ -141,19 +119,6 @@ const FileSystem = () => {
     fetchHomeData(); // 调用获取数据的函数
   };
 
-  // 根据搜索关键词过滤数据的函数
-  const filteredData = (items, keyword: string) => {
-    if (!keyword) return items; // 如果关键词为空，返回所有项
-
-    return items.filter((item) => {
-      // 如果项的标题包含关键词或有子项，则返回true
-      return item.name.toLowerCase().includes(keyword.toLowerCase());
-    });
-  };
-
-  let currentDir = data; // 初始化当前目录为从API获取的数据
-
-  currentDir = filteredData(currentDir, searchKeyword); // 根据搜索关键词过滤当前目录
 
   // 渲染FileSystem组件的JSX
   return (
@@ -163,29 +128,29 @@ const FileSystem = () => {
         currentPath={currentPath}
         handleHomeButtonClick={handleHomeButtonClick}
         handleBackButtonClick={handleBackButtonClick}
-        handleAddFolder={handleAddFolder}
-        setUploadModalVisible={setUploadModalVisible}
+        handleAddFolder={setFolderModalOpen}
+        setUploadModalVisible={setUploadModalOpen}
         searchKeyword={searchKeyword}
         setSearchKeyword={setSearchKeyword}
       />
 
       {/* 渲染FileList组件，并传递props */}
       <FileList
-        data={currentDir}
+        data={data}
         currentPath={currentPath}
         setData={setData}
         setKey={setKey}
         setCurrentPath={setCurrentPath}
         setSelectedFile={setSelectedFile}
-        setPublishModalVisible={setPublishModalVisible}
-        setDeleteModalVisible={setDeleteModalVisible}
+        // setPublishModalVisible={setPublishModalVisible}
+        setDeleteModalOpen={setDeleteModalOpen}
       />
 
       {/* 渲染FolderModal组件，并传递props */}
       <FolderModal
-        visible={modalVisible}
+        visible={folderModalVisible}
         handleOk={handleOkNewFolder}
-        handleCancel={handleCancel}
+        handleCancel={setFolderModalClose}
         newFolderName={newFolderName}
         setNewFolderName={setNewFolderName}
       />
@@ -194,7 +159,7 @@ const FileSystem = () => {
       <DeleteModal
         visible={deleteModalVisible}
         handleOk={handleDeleteOk}
-        handleCancel={handleDeleteCancel}
+        handleCancel={setDeleteModalClose}
         selectedFile={selectedFile}
       />
 
@@ -202,7 +167,7 @@ const FileSystem = () => {
       <FileUploadModal
         visible={uploadModalVisible}
         keyId={key}
-        onCancel={() => setUploadModalVisible(false)}
+        onCancel={setUploadModalClose}
       />
     </div>
   );

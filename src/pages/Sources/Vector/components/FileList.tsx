@@ -14,8 +14,8 @@ const FileList = ({
   setKey,
   setCurrentPath,
   setSelectedFile,
-  setPublishModalVisible,
-  setDeleteModalVisible,
+  // setPublishModalVisible,
+  setDeleteModalOpen,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
@@ -59,10 +59,7 @@ const FileList = ({
       return <ZipIcon />;
     }
     // Add more conditions for different file types and return respective icons
-    // Example:
-    if (fileExtension === 'txt') {
-      return <OtherFileIcon />; // Replace with the appropriate icon for .txt files
-    }
+  
     return <FileTextTwoTone />; // Default icon for other file types
   };
 
@@ -136,9 +133,9 @@ const FileList = ({
       />
       {selectedRowKeys.length > 0 && (
         <FileListActions
-          showPublishModal={undefined}
-          showDeleteModal={setDeleteModalVisible}
-          handleCancelSelection={undefined}
+          // showPublishModal={undefined}
+          openDeleteModal={setDeleteModalOpen}
+          // handleCancelSelection={undefined}
         />
       )}
     </>

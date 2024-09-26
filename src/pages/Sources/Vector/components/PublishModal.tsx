@@ -73,7 +73,7 @@ const PublishModal = ({ visible, handleOk, handleCancel, selectedFile }) => {
   return (
     <Modal
       title="发布文件"
-      visible={visible}
+      open={visible}
       onCancel={handleCancel}
       footer={[
         currentStep > 0 && (

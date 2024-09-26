@@ -1,10 +1,10 @@
 // FileListActions.jsx
-import { CloseOutlined, DeleteOutlined, ExportOutlined, UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, ExportOutlined } from '@ant-design/icons';
 import { Button, Popover } from 'antd';
 import { useState } from 'react';
 import MoveModal from './MoveModal';
 
-const FileListActions = ({ showPublishModal, showDeleteModal, handleCancelSelection }) => {
+const FileListActions:React.FC = ({openDeleteModal}) => {
   const [moveModalVisible, setMoveModalVisible] = useState(false);
 
   const handleMoveModalCancel = () => {
@@ -39,12 +39,12 @@ const FileListActions = ({ showPublishModal, showDeleteModal, handleCancelSelect
         }}
       >
         <Button.Group>
-          <Popover placement="top" content="发布">
+          {/* <Popover placement="top" content="发布">
             <Button type="text" icon={<UploadOutlined />} onClick={showPublishModal} />
-          </Popover>
+          </Popover> */}
 
           <Popover placement="top" content="删除">
-            <Button type="text" icon={<DeleteOutlined />} onClick={showDeleteModal} />
+            <Button type="text" icon={<DeleteOutlined />} onClick={openDeleteModal} />
           </Popover>
 
           <Popover placement="top" content="移动">
@@ -55,9 +55,9 @@ const FileListActions = ({ showPublishModal, showDeleteModal, handleCancelSelect
             />
           </Popover>
 
-          <Popover placement="top" content="取消多选">
+          {/* <Popover placement="top" content="取消多选">
             <Button type="text" icon={<CloseOutlined />} onClick={handleCancelSelection} />
-          </Popover>
+          </Popover> */}
         </Button.Group>
 
         {/* Move Modal */}
