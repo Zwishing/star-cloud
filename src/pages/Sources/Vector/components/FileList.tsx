@@ -15,6 +15,8 @@ interface FileListProps {
   setKey: (key: string) => void;
   setSelectedFile: (files: string[]) => void;
   setDeleteModalOpen: () => void;
+  setPath: (prev: (prev: string[]) => string[]) => void;
+
 }
 
 const FileList: React.FC<FileListProps> = ({
@@ -26,6 +28,7 @@ const FileList: React.FC<FileListProps> = ({
   setSelectedFile,
   // setPublishModalVisible,
   setDeleteModalOpen,
+  setPath,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
@@ -44,6 +47,7 @@ const FileList: React.FC<FileListProps> = ({
       } catch (error) {
         console.error(error);
       }
+      setPath((prev: any)=>[...prev,item.name]);
     }
   };
 

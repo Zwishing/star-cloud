@@ -15,7 +15,7 @@ const FileSystem: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [key, setKey] = useState<string>('');
-  const [path, setPath] = useState<string>('/vector');
+  const [path,setPath] = useState<string[]>(['/vector']);
 
   const [folderModalVisible, { setTrue: setFolderModalOpen, setFalse: setFolderModalClose }] =
     useBoolean(false);
@@ -91,7 +91,7 @@ const FileSystem: React.FC = () => {
         sourceCategory: 'vector',
         key,
         name: newFolderName,
-        path: `${path}/${newFolderName}`,
+        path: `${path.join('')}/${newFolderName}`,
       };
 
       setNewFolderName('');
@@ -137,6 +137,7 @@ const FileSystem: React.FC = () => {
         setDeleteModalOpen={setDeleteModalOpen}
         setCurrentPath={setCurrentPath}
         setKey={setKey}
+        setPath={setPath}
       />
       <FolderModal
         visible={folderModalVisible}
@@ -149,7 +150,6 @@ const FileSystem: React.FC = () => {
         visible={deleteModalVisible}
         handleOk={handleDeleteOk}
         handleCancel={setDeleteModalClose}
-        selectedFile={selectedFile}
       />
       <FileUploadModal visible={uploadModalVisible} keyId={key} onCancel={setUploadModalClose} />
     </div>

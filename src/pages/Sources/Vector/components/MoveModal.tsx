@@ -1,66 +1,37 @@
 // MoveModal.jsx
+import { Source } from '@/services/source/typings';
 import { CheckCircleFilled, CloseCircleFilled, FolderFilled } from '@ant-design/icons';
 import { Breadcrumb, Button, Col, Input, List, Modal, Row, message } from 'antd';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
-const MoveModal = ({ visible, onCancel, onMove }) => {
+interface MoveModalProps {
+  visible: boolean; // Controls the visibility of the modal
+  onCancel: () => void; // Function to handle the cancellation of the modal
+  onMove: () => void; // Function to handle the movement action
+}
+
+const MoveModal:React.FC<MoveModalProps> = ({ visible, onCancel, onMove }) => {
   // Example folder structure
-  const [currentFolder, setCurrentFolder] = useState(null);
+  const [currentFolder, setCurrentFolder] = useState<Source.Item | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState([{ title: '首页', key: '-1' }]);
-  const [selectedKey, setSelectedKey] = useState(null);
+  const [selectedKey, setSelectedKey] = useState<string>('');
   const [hoveredKey, setHoveredKey] = useState(null);
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
 
-  const folderData = [
+  const folderData:Source.Item[] = [
     {
-      title: 'Folder 1',
-      key: '1',
-      type: 'folder',
-      icon: <FolderFilled style={{ color: '#1890ff' }} />,
-      size: '10 KB',
-      modifiedTime: '2024-06-17',
-      children: [
-        {
-          title: 'File 1',
-          key: '3',
-          type: 'file',
-          icon: <FolderFilled style={{ color: '#1890ff' }} />,
-          size: '10 KB',
-          modifiedTime: '2024-06-17',
-        },
-      ],
-    },
-    {
-      title: 'Folder 2',
-      key: '2',
-      type: 'folder',
-      icon: <FolderFilled style={{ color: '#1890ff' }} />,
-      size: '10 KB',
-      modifiedTime: '2024-06-17',
-      children: [
-        {
-          title: 'File 2',
-          key: '4',
-          type: 'file',
-          icon: <FolderFilled style={{ color: '#1890ff' }} />,
-          size: '20 KB',
-          modifiedTime: '2024-06-16',
-        },
-        {
-          title: 'Empty Folder',
-          key: '5',
-          type: 'folder',
-          icon: <FolderFilled style={{ color: '#1890ff' }} />,
-          size: '0 KB',
-          modifiedTime: '2024-06-17',
-          children: [],
-        },
-      ],
-    },
+        name: 'Folder 1',
+        key: '1',
+        type: 'folder',
+        size: 10,
+        lastModified: "",
+        parentKey: '',
+        path: ''
+    }
   ];
 
-  const handleItemClick = (item) => {
+  const handleItemClick = (item:Source.Item) => {
     setCurrentFolder(item);
     setSelectedKey(item.key);
     // Update breadcrumbs
@@ -72,7 +43,7 @@ const MoveModal = ({ visible, onCancel, onMove }) => {
     if (index === -1) {
       setCurrentFolder(null);
       setBreadcrumbs([{ title: '首页', key: '-1' }]);
-      setSelectedKey(null);
+      setSelectedKey('');
     } else {
       const newBreadcrumbs = breadcrumbs.slice(0, index + 1);
       setCurrentFolder(folderData[index]);
