@@ -51,7 +51,7 @@ export async function upload(body: Source.UploadReq, options?: { [p: string]: an
   formData.append('sourceCategory', body.sourceCategory);
   formData.append('key', body.key);
   formData.append('name', body.name);
-  return request<Source.ItemsResp>(`/v1/source/${body.sourceCategory}/upload`, {
+  return request<Source.UploadResp>(`/v1/source/${body.sourceCategory}/upload`, {
     method: 'POST',
     data: formData,
     ...(options || {}),

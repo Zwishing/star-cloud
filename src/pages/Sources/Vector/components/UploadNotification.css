@@ -1,0 +1,19 @@
+.upload-list {
+  /* width: 24vw; */
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+}
+
+.status-row {
+  margin-bottom: 6px;
+}
+
+.file-info-row {
+  margin-bottom: 6px;
+}
+
+.progress-row {
+  margin-top: 6px;
+}

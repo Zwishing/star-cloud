@@ -1,22 +1,21 @@
-import { deleteItems, getHomeItems, getPreviousItems, newFolder } from '@/services/source/files';
 import { Source } from '@/services/source/typings';
-import { useBoolean, useRequest } from 'ahooks';
-import { message } from 'antd';
-import { useEffect, useState } from 'react';
+import { useBoolean } from 'ahooks';
+import { UploadFile, message } from 'antd';
+import { useEffect, useRef, useState } from 'react';
+import { useModel } from 'umi';
 import DeleteModal from './DeleteModal';
 import FileList from './FileList';
 import FileSystemHeader from './FileSystemHeader';
 import FileUploadModal from './FileUploadModal';
 import FolderModal from './FolderModal';
+import UploadNotification from './UploadNotification';
+
+const SourceCategory = 'vector';
 
 const FileSystem: React.FC = () => {
-  const [currentPath, setCurrentPath] = useState<string[]>(['']);
   const [newFolderName, setNewFolderName] = useState('');
-  const [selectedFile, setSelectedFile] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [key, setKey] = useState<string>('');
-  const [path,setPath] = useState<string[]>(['/vector']);
-
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [folderModalVisible, { setTrue: setFolderModalOpen, setFalse: setFolderModalClose }] =
     useBoolean(false);
   const [uploadModalVisible, { setTrue: setUploadModalOpen, setFalse: setUploadModalClose }] =
@@ -24,104 +23,98 @@ const FileSystem: React.FC = () => {
   const [deleteModalVisible, { setTrue: setDeleteModalOpen, setFalse: setDeleteModalClose }] =
     useBoolean(false);
 
-  const [data, setData] = useState<Source.Item[]>([]);
+  const [uploadListVisible, setUploadListVisible] = useState(false);
 
-  // Fetch home data
-  const { run: fetchHomeData } = useRequest(() => getHomeItems({ sourceCategory: 'vector' }), {
-    manual: true,
-    onSuccess: (result) => {
-      setKey(result.data.key);
-      setCurrentPath([result.data.key]);
-      setData(result.data.items); // Update the data state here
-    },
-    onError: (err) => {
-      console.error('获取数据出错:', err.message);
-    },
-  });
+  const uploadNotificationRef = useRef<any>(); // 定义 uploadNotificationRef 的类型
 
-  // Fetch previous items
-  const { run: fetchPreviousItems } = useRequest((params) => getPreviousItems(params), {
-    manual: true,
-    onSuccess: (resp) => {
-      if (resp.code === 200) {
-        setData(resp.data.items);
-        setCurrentPath((prev) => {
-          const newDir = [...prev];
-          newDir.pop();
-          return newDir;
-        });
-      }
-    },
-    onError: (err) => {
-      console.error('获取数据出错:', err);
-    },
-  });
+  const { currentDir, setHomeDir, setPrevDir, getCurentKey, getFirstKey } = useModel(
+    'CurrentDirModel',
+    (model) => ({
+      currentDir: model.currentDir,
+      setHomeDir: model.setHomeDir,
+      setPrevDir: model.setPrevDir,
+      getCurentKey: model.getCurentKey,
+      getFirstKey: model.getFirstKey,
+    }),
+  );
 
-  // Create new folder
-  const { run: createNewFolder } = useRequest((folder) => newFolder(folder), {
-    manual: true,
-    onSuccess: (item) => {
-      if (item.code === 200) {
-        setData((prevData) => [...prevData, item.data]); // Update the data state
-      }
-    },
-    onError: () => {
-      message.error('文件夹创建失败');
-    },
-  });
-
-  // Delete items
-  const { run: handleDeleteItems } = useRequest((params) => deleteItems(params), {
-    manual: true,
-    onSuccess: (resp) => {
-      if (resp.code === 200) {
-        setData((prevData) => prevData.filter((item) => !selectedFile.includes(item.key)));
-        setSelectedFile([]);
-      }
-      setDeleteModalClose();
-    },
-    onError: () => {
-      message.error('删除失败');
-    },
-  });
+  const {
+    items,
+    fetchHomeItems, // 获取首页项目的函数
+    fetchPrevItems, // 获取上一页项目的函数
+    createNewFolder,
+    handleDeleteItems,
+  } = useModel('SourceItemModel', (model) => ({
+    items: model.items,
+    setItems: model.setItems, // 从模型中获取项目列表
+    fetchHomeItems: model.fetchHomeItems, // 从模型中获取获取首页项目的函数
+    fetchPrevItems: model.fetchPrevItems, // 从模型中获取获取上一页项目的函数
+    createNewFolder: model.createNewFolder,
+    handleDeleteItems: model.handleDeleteItems,
+  }));
 
   const handleOkNewFolder = () => {
     if (newFolderName.trim()) {
       const folder: Source.NewFolderReq = {
-        sourceCategory: 'vector',
-        key,
+        sourceCategory: SourceCategory,
+        key: getCurentKey(),
         name: newFolderName,
-        path: `${path.join('')}/${newFolderName}`,
+        path: `${currentDir.path.join('')}/${newFolderName}`,
       };
 
       setNewFolderName('');
       setFolderModalClose();
-      createNewFolder(folder); // Trigger new folder creation
+      createNewFolder(folder);
     } else {
       message.error('文件夹名称不能为空');
     }
   };
 
   const handleDeleteOk = () => {
-    handleDeleteItems({ key: selectedFile, sourceCategory: 'vector' }); // Trigger deletion
+    handleDeleteItems({ key: selectedRowKeys, sourceCategory: SourceCategory });
+    setSelectedRowKeys([]);
+    setDeleteModalClose();
   };
 
   const handleBackButtonClick = () => {
-    fetchPreviousItems({ key, sourceCategory: 'vector' }); // Call fetchPreviousItems with parameters
+    fetchPrevItems({
+      key: getCurentKey(),
+      sourceCategory: SourceCategory,
+    });
+    setPrevDir();
   };
 
   const handleHomeButtonClick = () => {
-    fetchHomeData(); // Fetch home data
+    fetchHomeItems({
+      key: getFirstKey(),
+      sourceCategory: SourceCategory,
+    });
+    setHomeDir(items[0].parentKey);
+  };
+
+  const handleUploadStart = (file: UploadFile) => {
+    // 将上传文件的逻辑传递给 UploadNotification
+    setUploadListVisible(true);
+
+    if (uploadNotificationRef.current) {
+      uploadNotificationRef.current.handleUploadStart(file);
+    }
+
+    
+
   };
 
   useEffect(() => {
-    fetchHomeData(); // Fetch initial home data
+    fetchHomeItems({
+      key: getFirstKey(),
+      sourceCategory: SourceCategory,
+    });
+    setHomeDir();
   }, []);
 
   return (
     <div>
       <FileSystemHeader
-        currentPath={currentPath}
         handleHomeButtonClick={handleHomeButtonClick}
         handleBackButtonClick={handleBackButtonClick}
         handleAddFolder={setFolderModalOpen}
@@ -130,14 +123,9 @@ const FileSystem: React.FC = () => {
         setSearchKeyword={setSearchKeyword}
       />
       <FileList
-        data={data}
-        currentPath={currentPath}
-        setData={setData} // Pass setData to child for updates
-        setSelectedFile={setSelectedFile}
+        selectedRowKeys={selectedRowKeys}
+        setSelectedRowKeys={setSelectedRowKeys}
         setDeleteModalOpen={setDeleteModalOpen}
-        setCurrentPath={setCurrentPath}
-        setKey={setKey}
-        setPath={setPath}
       />
       <FolderModal
         visible={folderModalVisible}
@@ -151,7 +139,18 @@ const FileSystem: React.FC = () => {
         handleOk={handleDeleteOk}
         handleCancel={setDeleteModalClose}
       />
-      <FileUploadModal visible={uploadModalVisible} keyId={key} onCancel={setUploadModalClose} />
+
+      <FileUploadModal
+        visible={uploadModalVisible}
+        onUploadStart={handleUploadStart}
+        onCancel={setUploadModalClose}
+      />
+      <UploadNotification
+        visible={uploadListVisible}
+        onVisible={setUploadListVisible}
+        ref={uploadNotificationRef}
+        keyId={getCurentKey()}
+      />
     </div>
   );
 };

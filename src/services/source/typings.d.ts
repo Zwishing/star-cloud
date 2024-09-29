@@ -11,6 +11,14 @@ export declare namespace Source {
     file: File; // 添加文件字段
   };
 
+  type UploadResp = {
+    code: number;
+    data: {
+      key: string;
+    };
+    msg: string;
+  };
+
   type Item = {
     parentKey: string;
     name: string;

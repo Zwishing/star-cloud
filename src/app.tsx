@@ -1,4 +1,4 @@
-import { AvatarDropdown, AvatarName, Footer, Question, SelectLang } from '@/components';
+import { AvatarDropdown, AvatarName, Question, SelectLang } from '@/components';
 import { currentUser as queryCurrentUser } from '@/services/user/api';
 import { LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
@@ -73,7 +73,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       content: initialState?.currentUser?.name,
     },
     // 渲染页脚
-    footerRender: () => <Footer />,
+    // footerRender: () => <Footer />,
     // 页面改变时的处理函数
     onPageChange: () => {
       const { location } = history;

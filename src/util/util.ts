@@ -1,3 +1,4 @@
+import { UploadFile } from 'antd';
 import JSZip from 'jszip';
 
 interface ValidationResult {
@@ -7,12 +8,7 @@ interface ValidationResult {
   validFiles: string[];
 }
 
-export async function validateZipShapefile(file: File | undefined): Promise<ValidationResult> {
-  // 检查文件是否存在
-  if (!file) {
-    return { isValid: false, error: '未选择文件。', shpCount: 0, validFiles: [] };
-  }
-
+export async function validateZipShapefile(file: UploadFile): Promise<ValidationResult> {
   try {
     // 使用 JSZip 解压 ZIP 文件
     const zip = await JSZip.loadAsync(file);
@@ -45,7 +41,7 @@ export async function validateZipShapefile(file: File | undefined): Promise<Vali
     if (shpCount == 0) {
       return {
         isValid: false,
-        error: 'zip压缩包中无Shapefile文件',
+        error: `${file.name}中无Shapefile文件`,
         shpCount: 0,
         validFiles: [],
       };
@@ -61,5 +57,17 @@ export async function validateZipShapefile(file: File | undefined): Promise<Vali
       shpCount: 0,
       validFiles: [],
     }; // 返回解析错误
+  }
+}
+
+export function formatFileSize(size: number | undefined) {
+  if (size === undefined) return '';
+  if (size === 0) return '0 KB';
+  if (size >= 1024 * 1024 * 1024) {
+    return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  } else if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  } else {
+    return `${(size / 1024).toFixed(1)} KB`;
   }
 }

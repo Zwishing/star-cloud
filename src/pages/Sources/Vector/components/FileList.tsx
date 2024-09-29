@@ -1,69 +1,59 @@
-import { FolderIcon, ZipIcon } from '@/components/Icon'; // Import the required icons
-import { getNextItems } from '@/services/source/files';
+import { FolderIcon, ZipIcon } from '@/components/Icon';
 import { Source } from '@/services/source/typings';
+import { formatFileSize } from '@/util/util';
 import { FileTextTwoTone } from '@ant-design/icons';
-import { Button, Empty, Space, Table } from 'antd';
-import { useEffect, useState } from 'react';
+import { useModel } from '@umijs/max';
+import { Button, Empty, Flex, Space, Table } from 'antd';
+import { useEffect, useRef, useState } from 'react';
 import './FileList.css';
 import FileListActions from './FileListActions';
 
 interface FileListProps {
-  data: Source.Item[];
-  setData: (items: Source.Item[]) => void;
-  currentPath: string[];
-  setCurrentPath: (path: string[]) => void;
-  setKey: (key: string) => void;
-  setSelectedFile: (files: string[]) => void;
+  selectedRowKeys: string[];
+  setSelectedRowKeys: (selecteKey: string[]) => void;
   setDeleteModalOpen: () => void;
-  setPath: (prev: (prev: string[]) => string[]) => void;
-
 }
 
 const FileList: React.FC<FileListProps> = ({
-  data,
-  setData,
-  currentPath,
-  setCurrentPath,
-  setKey,
-  setSelectedFile,
-  // setPublishModalVisible,
+  selectedRowKeys,
+  setSelectedRowKeys,
   setDeleteModalOpen,
-  setPath,
 }) => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [tableHeight, setTableHeight] = useState<number>(0);
+  const tableRef = useRef<HTMLDivElement | null>(null);
+
+  const { setNextDir } = useModel('CurrentDirModel', (model) => ({
+    setNextDir: model.setNextDir,
+  }));
+
+  const { items, fetchNextItems } = useModel('SourceItemModel', (model) => ({
+    items: model.items,
+    fetchNextItems: model.fetchNextItems,
+  }));
 
   useEffect(() => {
-    // Update selected files based on selectedRowKeys
-    setSelectedFile(selectedRowKeys);
-  }, [selectedRowKeys, setSelectedFile]);
+    const calculateHeight = () => {
+      if (tableRef.current) {
+        const availableHeight =
+          window.innerHeight - tableRef.current.getBoundingClientRect().top - 90; // Adjust for margin
+        setTableHeight(availableHeight > 0 ? availableHeight : 0);
+      }
+    };
+
+    calculateHeight();
+    window.addEventListener('resize', calculateHeight);
+    return () => {
+      window.removeEventListener('resize', calculateHeight);
+    };
+  }, []);
 
   const handleRowClick = async (item: Source.Item) => {
     if (item.type === 'folder') {
-      try {
-        const resp = await getNextItems({ key: item.key, sourceCategory: 'vector' });
-        setData(resp.data.items);
-        setKey(item.key);
-        setCurrentPath([...currentPath, item.key]);
-      } catch (error) {
-        console.error(error);
-      }
-      setPath((prev: any)=>[...prev,item.name]);
+      fetchNextItems({ key: item.key, sourceCategory: 'vector' });
+      setNextDir(item.key, item.name);
     }
   };
 
-  // Function to format file size
-  const formatFileSize = (size: number) => {
-    if (size === 0) return '0 KB';
-    if (size >= 1024 * 1024 * 1024) {
-      return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-    } else if (size >= 1024 * 1024) {
-      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-    } else {
-      return `${(size / 1024).toFixed(1)} KB`;
-    }
-  };
-
-  // Function to determine the icon based on file type
   const getIconByFileType = (item: Source.Item) => {
     if (item.type === 'folder') {
       return <FolderIcon />;
@@ -72,9 +62,7 @@ const FileList: React.FC<FileListProps> = ({
     if (fileExtension === 'zip') {
       return <ZipIcon />;
     }
-    // Add more conditions for different file types and return respective icons
-
-    return <FileTextTwoTone />; // Default icon for other file types
+    return <FileTextTwoTone />;
   };
 
   const columns = [
@@ -104,55 +92,44 @@ const FileList: React.FC<FileListProps> = ({
   ];
 
   const rowSelection = {
+    columnWidth: 48,
     selectedRowKeys,
     onChange: (newSelectedRowKeys: React.Key[]) => {
       setSelectedRowKeys(newSelectedRowKeys as string[]);
     },
-  };
-
-  const handleClearSelection = () => {
-    setSelectedRowKeys([]);
+    selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT, Table.SELECTION_NONE],
   };
 
   return (
-    <>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
-        {selectedRowKeys.length > 0 && <span>选中 {selectedRowKeys.length} 项</span>}
-        {selectedRowKeys.length > 0 && (
-          <Button type="link" onClick={handleClearSelection}>
-            清除选择
-          </Button>
-        )}
-      </div>
-      <Table
-        rowKey="key"
-        columns={columns}
-        dataSource={data}
-        pagination={false}
-        rowSelection={rowSelection}
-        style={{
-          borderRadius: '12px',
-          overflow: 'hidden',
-        }}
-        locale={{
-          emptyText: <Empty description="无数据" />,
-        }}
-      />
+    <Flex gap="middle" vertical>
       {selectedRowKeys.length > 0 && (
-        <FileListActions
-          // showPublishModal={undefined}
-          openDeleteModal={setDeleteModalOpen}
-          // handleCancelSelection={undefined}
-        />
+        <Flex align="center" gap="middle">
+          <Button type="link" onClick={() => setSelectedRowKeys([])}>
+            取消选择
+          </Button>
+          {`已选择${selectedRowKeys.length}项`}
+        </Flex>
       )}
-    </>
+      <div ref={tableRef}>
+        <Table
+          rowKey="key"
+          columns={columns}
+          dataSource={items}
+          pagination={false}
+          rowSelection={rowSelection}
+          style={{
+            borderRadius: '12px',
+            overflow: 'hidden',
+          }}
+          scroll={{ y: tableHeight }} // Dynamic scroll height
+          locale={{
+            emptyText: <Empty description="无数据" />,
+          }}
+          virtual
+        />
+        {selectedRowKeys.length > 0 && <FileListActions openDeleteModal={setDeleteModalOpen} />}
+      </div>
+    </Flex>
   );
 };
 
