@@ -13,6 +13,7 @@ import { useState } from 'react'; // 导入React的useState
 
 export default function SourceItem() {
   const [items, setItems] = useState<Source.Item[]>([]); // 存储获取到的项目列表，初始化为空数组
+
   // 获取首页项目的请求
   const { run: fetchHomeItems } = useRequest(
     (param: Source.ItemsParams) => getHomeItems({ sourceCategory: param.sourceCategory }),
@@ -58,8 +59,17 @@ export default function SourceItem() {
     },
   );
 
-  const { run: createNewFolder } = useRequest((folder) => newFolder(folder), {
+  // 创建一个文件夹
+  const { run: createNewFolder } = useRequest((folder: Source.NewFolderReq) => newFolder(folder), {
     manual: true,
+    onBefore: (params) => {
+      //检查重名
+      const exists = items.some((item) => item.name === params[0].name);
+      if (exists) {
+        message.warning('文件夹已存在');
+        return false; // 返回 false 来停止后续请求
+      }
+    },
     onSuccess: (item) => {
       if (item.code === 200) {
         setItems((prevData: any) => [...prevData, item.data]);
@@ -70,6 +80,7 @@ export default function SourceItem() {
     },
   });
 
+  // 删除文件和文件夹
   const { run: handleDeleteItems } = useRequest(
     (params: Source.DeleteItems) => deleteItems(params),
     {
@@ -94,25 +105,39 @@ export default function SourceItem() {
     }
   };
 
-  const { run: uploadFile } = useRequest((param: Source.UploadReq, options: {
-      onUploadProgress: (progressEvent: any) => void,
-      onSuccess:(resp:any)=>void,
-      onError:(err:Error)=>void
-    }) => upload(param, {onUploadProgress: options.onUploadProgress}), {
+  // 上传文件
+  const { run: uploadFile } = useRequest(
+    (
+      param: Source.UploadReq,
+      options: {
+        onUploadProgress: (progressEvent: any) => void;
+        onSuccess: (resp: any) => void;
+        onError: (err: Error) => void;
+      },
+    ) => upload(param, { onUploadProgress: options.onUploadProgress }),
+    {
       manual: true,
+      onBefore: (params) => {
+        //检查重名
+        const exists = items.some((item) => item.name === params[0].name);
+        if (exists) {
+          message.warning('文件已存在');
+          return false; // 返回 false 来停止后续请求
+        }
+      },
       onSuccess: (resp, params) => {
-        params[1].onSuccess(resp)
+        params[1].onSuccess(resp);
+        // 更新列表
         getItemsByKey({
-          key:params[0].key,
-          sourceCategory:params[0].sourceCategory,
-        })
+          key: params[0].key,
+          sourceCategory: params[0].sourceCategory,
+        });
       },
-      onError: (err,params) => {
-        params[1].onError(err)
+      onError: (err, params) => {
+        params[1].onError(err);
       },
-    });
-
-  
+    },
+  );
 
   // 返回的内容
   return {

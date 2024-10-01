@@ -92,6 +92,7 @@ const UploadList: React.FC<UploadListProps> = ({
 interface UploadNotificationProps {
   visible: boolean;
   onVisible: (visible: boolean) => void;
+  // 添加 ref 的类型
 }
 
 const UploadNotification: React.FC<UploadNotificationProps> = forwardRef(

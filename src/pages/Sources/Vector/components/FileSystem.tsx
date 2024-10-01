@@ -95,13 +95,9 @@ const FileSystem: React.FC = () => {
   const handleUploadStart = (file: UploadFile) => {
     // 将上传文件的逻辑传递给 UploadNotification
     setUploadListVisible(true);
-
     if (uploadNotificationRef.current) {
       uploadNotificationRef.current.handleUploadStart(file);
     }
-
-    
-
   };
 
   useEffect(() => {

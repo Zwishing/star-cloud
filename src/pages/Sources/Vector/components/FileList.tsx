@@ -3,8 +3,9 @@ import { Source } from '@/services/source/typings';
 import { formatFileSize } from '@/util/util';
 import { FileTextTwoTone } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
+import { useSize } from 'ahooks';
 import { Button, Empty, Flex, Space, Table } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import './FileList.css';
 import FileListActions from './FileListActions';
 
@@ -19,8 +20,13 @@ const FileList: React.FC<FileListProps> = ({
   setSelectedRowKeys,
   setDeleteModalOpen,
 }) => {
-  const [tableHeight, setTableHeight] = useState<number>(0);
+  // const [tableHeight, setTableHeight] = useState<number>(0);
   const tableRef = useRef<HTMLDivElement | null>(null);
+  const size = useSize(tableRef);
+
+  const availableHeight =
+    tableRef.current && size ? size.height - tableRef.current.getBoundingClientRect().top - 90 : 0;
+  const tableHeight = availableHeight > 0 ? availableHeight : 0;
 
   const { setNextDir } = useModel('CurrentDirModel', (model) => ({
     setNextDir: model.setNextDir,
@@ -31,21 +37,21 @@ const FileList: React.FC<FileListProps> = ({
     fetchNextItems: model.fetchNextItems,
   }));
 
-  useEffect(() => {
-    const calculateHeight = () => {
-      if (tableRef.current) {
-        const availableHeight =
-          window.innerHeight - tableRef.current.getBoundingClientRect().top - 90; // Adjust for margin
-        setTableHeight(availableHeight > 0 ? availableHeight : 0);
-      }
-    };
+  // useEffect(() => {
+  //   const calculateHeight = () => {
+  //     if (tableRef.current) {
+  //       const availableHeight =
+  //         window.innerHeight - tableRef.current.getBoundingClientRect().top - 90; // Adjust for margin
+  //       setTableHeight(availableHeight > 0 ? availableHeight : 0);
+  //     }
+  //   };
 
-    calculateHeight();
-    window.addEventListener('resize', calculateHeight);
-    return () => {
-      window.removeEventListener('resize', calculateHeight);
-    };
-  }, []);
+  //   calculateHeight();
+  //   window.addEventListener('resize', calculateHeight);
+  //   return () => {
+  //     window.removeEventListener('resize', calculateHeight);
+  //   };
+  // }, []);
 
   const handleRowClick = async (item: Source.Item) => {
     if (item.type === 'folder') {
