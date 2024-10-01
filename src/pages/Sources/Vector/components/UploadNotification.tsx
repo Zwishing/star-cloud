@@ -11,20 +11,21 @@ import {
 } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
 import { Alert, Button, Col, Divider, Flex, FloatButton, Popover, Progress, Row, Tag } from 'antd';
-import React, { forwardRef, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid'; // Import uuid for unique ID generation
 import './UploadNotification.css';
 
-interface UploadProps {
-  id: number; // Unique ID
+type UploadProps = {
+  id: string; // Change to string for UUID
   name: string;
   size: number;
-  status: string;
+  status: 'uploading' | 'success' | 'error' | 'processing';
   errorMessage: string;
   progress: number;
-}
+};
 
 interface UploadListProps extends UploadProps {
-  onClose: (id: number) => void; // Pass the ID to the onClose function
+  onClose: (id: string) => void; // Use string for ID
 }
 
 const UploadList: React.FC<UploadListProps> = ({
@@ -37,7 +38,7 @@ const UploadList: React.FC<UploadListProps> = ({
   onClose,
 }) => {
   const handleClose = () => {
-    onClose(id); // Use the unique ID to close the specific upload
+    onClose(id);
   };
 
   return (
@@ -99,36 +100,36 @@ interface UploadNotification {
 const UploadNotification = forwardRef(({ keyId, visible, onVisible }: UploadNotification, ref) => {
   const [popoverVisible, setPopoverVisible] = useState<boolean>(false);
   const [uploads, setUploads] = useState<UploadProps[]>([]);
-
   const { setItems } = useModel('SourceItemModel', (model) => ({
     setItems: model.setItems,
   }));
 
   const handleUploadStart = async (file: File) => {
-    const uniqueId = new Date().getTime() + Math.random(); // Generate a unique ID
+    if (!file) return;
+
+    const uniqueId = uuidv4(); // Use uuid for unique ID
     const newUpload: UploadProps = {
-      id: uniqueId, // Add unique ID here
+      id: uniqueId,
       name: file.name,
       size: file.size ?? 0,
       status: 'uploading',
       errorMessage: '',
       progress: 0,
     };
+
     setUploads((prev) => [...prev, newUpload]);
     setPopoverVisible(true);
-    if (!file) {
-      return;
-    }
+
     const uploadReq: Source.UploadReq = {
       sourceCategory: 'vector',
       key: keyId,
       name: file.name,
-      file: file, // Use the actual File object
+      file: file,
     };
 
     try {
       const resp = await upload(uploadReq, {
-        onUploadProgress: (event: { lengthComputable: any; loaded: number; total: number }) => {
+        onUploadProgress: (event: ProgressEvent) => {
           if (event.lengthComputable) {
             const percent = Math.round((event.loaded / event.total) * 100);
             setUploads((prev) =>
@@ -136,6 +137,7 @@ const UploadNotification = forwardRef(({ keyId, visible, onVisible }: UploadNoti
                 upload.id === uniqueId ? { ...upload, progress: percent } : upload,
               ),
             );
+
             if (percent === 100) {
               setUploads((prev) =>
                 prev.map((upload) =>
@@ -162,43 +164,46 @@ const UploadNotification = forwardRef(({ keyId, visible, onVisible }: UploadNoti
         setItems((prev) => [...prev, item]);
       }
       handleUploadSuccess(uniqueId);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '发生未知错误';
+    } catch (error) {
+      const errorMessage = (error as Error).message || '发生未知错误';
       setUploads((prev) =>
         prev.map((upload) =>
           upload.id === uniqueId
-            ? { ...upload, status: 'error', errorMessage: errorMessage, progress: 0 }
+            ? { ...upload, status: 'error', errorMessage, progress: 0 }
             : upload,
         ),
       );
     }
   };
 
-  const handleUploadSuccess = (id: number) => {
+  const handleUploadSuccess = useCallback((id: string) => {
     setUploads((prev) =>
       prev.map((upload) =>
         upload.id === id ? { ...upload, status: 'success', progress: 100 } : upload,
       ),
     );
-  };
+  }, []);
 
   useImperativeHandle(ref, () => ({
     handleUploadStart,
   }));
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setUploads([]);
     setPopoverVisible(false);
     onVisible(false);
-  };
+  }, [onVisible]);
 
-  const handleClose = (id: number) => {
-    if (uploads.length === 1) {
-      setPopoverVisible(false);
-      onVisible(false);
-    }
-    setUploads((prev) => prev.filter((upload) => upload.id !== id)); // Remove the specific upload
-  };
+  const handleClose = useCallback(
+    (id: string) => {
+      if (uploads.length === 1) {
+        setPopoverVisible(false);
+        onVisible(false);
+      }
+      setUploads((prev) => prev.filter((upload) => upload.id !== id));
+    },
+    [uploads, onVisible],
+  );
 
   const content = (
     <div>
@@ -208,9 +213,8 @@ const UploadNotification = forwardRef(({ keyId, visible, onVisible }: UploadNoti
           清空并关闭
         </Button>
       </Flex>
-
       {uploads.map((upload) => (
-        <UploadList key={upload.id} {...upload} onClose={handleClose} /> // Pass onClose with ID
+        <UploadList key={upload.id} {...upload} onClose={handleClose} />
       ))}
     </div>
   );
