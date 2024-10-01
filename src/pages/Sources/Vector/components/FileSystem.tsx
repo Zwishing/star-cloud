@@ -149,7 +149,6 @@ const FileSystem: React.FC = () => {
         visible={uploadListVisible}
         onVisible={setUploadListVisible}
         ref={uploadNotificationRef}
-        keyId={getCurentKey()}
       />
     </div>
   );

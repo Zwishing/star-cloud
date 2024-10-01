@@ -4,6 +4,7 @@ import {
   getNextItems,
   getPreviousItems,
   newFolder,
+  upload,
 } from '@/services/source/files'; // 导入获取首页、下一页和上一页项目的API函数
 import { Source } from '@/services/source/typings'; // 导入类型定义
 import { useRequest } from 'ahooks'; // 导入ahooks的useRequest
@@ -93,6 +94,26 @@ export default function SourceItem() {
     }
   };
 
+  const { run: uploadFile } = useRequest((param: Source.UploadReq, options: {
+      onUploadProgress: (progressEvent: any) => void,
+      onSuccess:(resp:any)=>void,
+      onError:(err:Error)=>void
+    }) => upload(param, {onUploadProgress: options.onUploadProgress}), {
+      manual: true,
+      onSuccess: (resp, params) => {
+        params[1].onSuccess(resp)
+        getItemsByKey({
+          key:params[0].key,
+          sourceCategory:params[0].sourceCategory,
+        })
+      },
+      onError: (err,params) => {
+        params[1].onError(err)
+      },
+    });
+
+  
+
   // 返回的内容
   return {
     items,
@@ -103,5 +124,6 @@ export default function SourceItem() {
     getItemsByKey,
     createNewFolder,
     handleDeleteItems,
+    uploadFile,
   };
 }
