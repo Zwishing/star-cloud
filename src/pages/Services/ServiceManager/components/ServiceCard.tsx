@@ -12,6 +12,7 @@ const ServiceCard = ({ service, onDelete, onPreview }) => {
       //   style={{ margin: '16px 8px' }}
       cover={<img alt={service.name} src={service.image} style={{ objectFit: 'cover' }} />}
       actions={[
+        // eslint-disable-next-line react/jsx-key
         <SettingOutlined onClick={() => onPreview(service)} />,
         <Link
           to={{ pathname: '/services/edit', search: `?key=${service.key}` }}
@@ -20,6 +21,7 @@ const ServiceCard = ({ service, onDelete, onPreview }) => {
         >
           <EditOutlined key="edit" />
         </Link>,
+        // eslint-disable-next-line react/jsx-key
         <SettingOutlined />,
         <DeleteOutlined key="delete" onClick={() => onDelete(service)} />,
       ]}

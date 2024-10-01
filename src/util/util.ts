@@ -15,7 +15,7 @@ export async function validateZipShapefile(file: UploadFile): Promise<Validation
     const fileNames = Object.keys(zip.files);
 
     let shpCount = 0;
-    const requiredExtensions = ['.shp', '.dbf', '.shx', '.prj'];
+    // const requiredExtensions = ['.shp', '.dbf', '.shx', '.prj'];
     const errors: string[] = [];
 
     // 遍历文件，检查文件类型
@@ -38,7 +38,7 @@ export async function validateZipShapefile(file: UploadFile): Promise<Validation
     }
 
     // 检查是否有 .shp、.dbf、.shx 和 .prj 文件
-    if (shpCount == 0) {
+    if (shpCount === 0) {
       return {
         isValid: false,
         error: `${file.name}中无Shapefile文件`,
