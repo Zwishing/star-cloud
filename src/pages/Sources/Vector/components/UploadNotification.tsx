@@ -13,17 +13,17 @@ import { Alert, Button, Col, Divider, Flex, FloatButton, Popover, Progress, Row,
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import './UploadNotification.css';
 
-interface UploadProps {
-  id: number; // Unique ID
+type UploadProps = {
+  id: number; // Change to string for UUID
   name: string;
   size: number;
-  status: string;
+  status: 'uploading' | 'success' | 'error' | 'processing';
   errorMessage: string;
   progress: number;
-}
+};
 
 interface UploadListProps extends UploadProps {
-  onClose: (id: number) => void; // Pass the ID to the onClose function
+  onClose: (id: number) => void; // Use string for ID
 }
 
 const UploadList: React.FC<UploadListProps> = ({
@@ -36,7 +36,7 @@ const UploadList: React.FC<UploadListProps> = ({
   onClose,
 }) => {
   const handleClose = () => {
-    onClose(id); // Use the unique ID to close the specific upload
+    onClose(id);
   };
 
   return (
@@ -152,7 +152,11 @@ const UploadNotification: React.FC<UploadNotificationProps> = forwardRef(
         }
       };
 
-      const handleUploadState = (id: number, state: string, errorMessage: string = '') => {
+      const handleUploadState = (
+        id: number,
+        state: UploadListProps['status'],
+        errorMessage: string = '',
+      ) => {
         setUploads((prev) =>
           prev.map((upload) =>
             upload.id === id
