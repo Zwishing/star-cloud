@@ -22,12 +22,6 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ visible, onCancel, on
     setFileName(e.target.value);
   };
 
-  const handleUpload = () => {
-    if (fileList.length !== 0) {
-      onUploadStart(fileList[0]);
-    }
-    handleCancel();
-  };
 
   const beforeUpload = (file: UploadFile): boolean => {
     if (file) {
@@ -64,6 +58,13 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({ visible, onCancel, on
     setFileName('');
     setErrorMessage(null);
     setFileList([]);
+  };
+
+  const handleUpload = () => {
+    if (fileList.length !== 0) {
+      onUploadStart(fileList[0]);
+    }
+    handleCancel();
   };
 
   return (
