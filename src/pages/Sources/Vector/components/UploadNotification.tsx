@@ -1,4 +1,3 @@
-import { upload } from '@/services/source/files';
 import { Source } from '@/services/source/typings';
 import { formatFileSize } from '@/util/util';
 import {
@@ -90,21 +89,27 @@ const UploadList: React.FC<UploadListProps> = ({
   );
 };
 
-interface UploadNotification {
+interface UploadNotificationProps {
   visible: boolean;
   onVisible: (visible: boolean) => void;
-  keyId: string;
 }
 
-const UploadNotification = forwardRef(({ keyId, visible, onVisible }: UploadNotification, ref) => {
+const UploadNotification = forwardRef(({visible, onVisible }: UploadNotificationProps, ref) => {
   const [popoverVisible, setPopoverVisible] = useState<boolean>(false);
   const [uploads, setUploads] = useState<UploadProps[]>([]);
 
-  const { setItems } = useModel('SourceItemModel', (model) => ({
-    setItems: model.setItems,
+  const { uploadFile } = useModel('SourceItemModel', (model) => ({
+    uploadFile: model.uploadFile
   }));
 
+  const { getCurentKey } = useModel('CurrentDirModel', (model) => ({
+    getCurentKey: model.getCurentKey,
+  }));
+
+  
+
   const handleUploadStart = async (file: File) => {
+    if (!file) return;
     const uniqueId = new Date().getTime() + Math.random(); // Generate a unique ID
     const newUpload: UploadProps = {
       id: uniqueId, // Add unique ID here
@@ -116,70 +121,58 @@ const UploadNotification = forwardRef(({ keyId, visible, onVisible }: UploadNoti
     };
     setUploads((prev) => [...prev, newUpload]);
     setPopoverVisible(true);
-    if (!file) {
-      return;
-    }
+    
     const uploadReq: Source.UploadReq = {
       sourceCategory: 'vector',
-      key: keyId,
+      key: getCurentKey(),
       name: file.name,
       file: file, // Use the actual File object
     };
 
-    try {
-      const resp = await upload(uploadReq, {
-        onUploadProgress: (event: { lengthComputable: any; loaded: number; total: number }) => {
-          if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100);
-            setUploads((prev) =>
-              prev.map((upload) =>
-                upload.id === uniqueId ? { ...upload, progress: percent } : upload,
-              ),
-            );
-            if (percent === 100) {
-              setUploads((prev) =>
-                prev.map((upload) =>
-                  upload.id === uniqueId
-                    ? { ...upload, status: 'processing', progress: 100 }
-                    : upload,
-                ),
-              );
-            }
-          }
-        },
-      });
-
-      if (resp.code === 200) {
-        const item: Source.Item = {
-          parentKey: keyId,
-          name: file.name,
-          key: resp.data.key,
-          type: 'file',
-          path: '',
-          size: file.size,
-          lastModified: file.lastModified.toString(),
-        };
-        setItems((prev) => [...prev, item]);
+    const onUploadProgress = (event: { lengthComputable: any; loaded: number; total: number })=>{
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        setUploads((prev) =>
+          prev.map((upload) =>
+            upload.id === uniqueId ? { ...upload, progress: percent } : upload,
+          ),
+        );
+        if (percent === 100) {
+          setUploads((prev) =>
+            prev.map((upload) =>
+              upload.id === uniqueId
+                ? { ...upload, status: 'processing', progress: 100 }
+                : upload,
+            ),
+          );
+        }
       }
-      handleUploadSuccess(uniqueId);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '发生未知错误';
+    }
+
+    const handleUploadState = (id: number, state: string, errorMessage: string = '') => {
       setUploads((prev) =>
         prev.map((upload) =>
-          upload.id === uniqueId
-            ? { ...upload, status: 'error', errorMessage: errorMessage, progress: 0 }
-            : upload,
-        ),
+          upload.id === id
+            ? {
+                ...upload,
+                status: state,
+                progress: state === 'success' ? 100 : state === 'error' ? 0 : upload.progress,
+                errorMessage: state === 'error' ? errorMessage : '',
+              }
+            : upload
+        )
       );
-    }
-  };
+    };
 
-  const handleUploadSuccess = (id: number) => {
-    setUploads((prev) =>
-      prev.map((upload) =>
-        upload.id === id ? { ...upload, status: 'success', progress: 100 } : upload,
-      ),
-    );
+    uploadFile(uploadReq,{
+      onUploadProgress: onUploadProgress,
+      onSuccess:()=>{
+        handleUploadState(uniqueId,'success','');
+      },
+      onError:(err)=>{
+        handleUploadState(uniqueId,'error', err.message)
+      }
+    });
   };
 
   useImperativeHandle(ref, () => ({
