@@ -86,9 +86,7 @@ export default function SourceItem() {
     {
       manual: true,
       onSuccess: (resp, params) => {
-        if (resp.code === 200) {
           setItems((prevData) => prevData.filter((item) => !params[0].key.includes(item.key)));
-        }
       },
       onError: () => {
         message.error('删除失败');

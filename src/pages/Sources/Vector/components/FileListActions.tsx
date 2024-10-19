@@ -1,19 +1,21 @@
 // FileListActions.jsx
-import { DeleteOutlined, ExportOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, DeleteOutlined, ExportOutlined, UploadOutlined } from '@ant-design/icons';
 import { useBoolean } from 'ahooks';
-import { Button, Popover } from 'antd';
+import { Button, Flex, Popover } from 'antd';
 import MoveModal from './MoveModal';
+import { Source } from '@/services/source/typings';
 
 interface FileListActionsProps {
   openDeleteModal: () => void;
+  openPublishModal:() => void;
+  selectedRow: Source.Item[];
 }
 
-const FileListActions: React.FC<FileListActionsProps> = ({ openDeleteModal }) => {
+const FileListActions: React.FC<FileListActionsProps> = ({ openDeleteModal, openPublishModal, selectedRow }) => {
   const [moveModalVisible, { setTrue: setMoveModalOpen, setFalse: setMoveModalClose }] =
     useBoolean(false);
 
   return (
-    <>
       <div
         style={{
           position: 'fixed',
@@ -35,24 +37,29 @@ const FileListActions: React.FC<FileListActionsProps> = ({ openDeleteModal }) =>
             justifyContent: 'center', // Center align the buttons horizontally
           }}
         >
-          <Button.Group>
-            {/* <Popover placement="top" content="发布">
-            <Button type="text" icon={<UploadOutlined />} onClick={showPublishModal} />
+          <Flex gap={4}>
+          <Popover placement="top" content="发布">
+            <Button
+              type="text"
+              icon={<CloudUploadOutlined/>}
+              disabled={selectedRow.length !== 1 || selectedRow[0].type !== 'file'}
+              onClick={openPublishModal}
+            />
+          </Popover>
+
+          <Popover placement="top" content="删除">
+            <Button type="text" icon={<DeleteOutlined />} onClick={openDeleteModal} />
+          </Popover>
+
+          {/* <Popover placement="top" content="移动">
+            <Button type="text" icon={<ExportOutlined />} onClick={setMoveModalOpen} />
           </Popover> */}
 
-            <Popover placement="top" content="删除">
-              <Button type="text" icon={<DeleteOutlined />} onClick={openDeleteModal} />
-            </Popover>
-
-            <Popover placement="top" content="移动">
-              <Button type="text" icon={<ExportOutlined />} onClick={setMoveModalOpen} />
-            </Popover>
-
-            {/* <Popover placement="top" content="取消多选">
-            <Button type="text" icon={<CloseOutlined />} onClick={handleCancelSelection} />
-          </Popover> */}
-          </Button.Group>
-        </div>
+          {/* <Popover placement="top" content="取消多选">
+          <Button type="text" icon={<CloseOutlined />} onClick={handleCancelSelection} />
+        </Popover> */}
+        </Flex>
+        
       </div>
       {/* Move Modal */}
       <MoveModal
@@ -60,7 +67,7 @@ const FileListActions: React.FC<FileListActionsProps> = ({ openDeleteModal }) =>
         onCancel={setMoveModalClose}
         onMove={setMoveModalClose}
       />
-    </>
+      </div>
   );
 };
 

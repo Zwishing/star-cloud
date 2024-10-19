@@ -1,4 +1,4 @@
-import { Modal } from 'antd';
+import { Button, Modal } from 'antd';
 
 interface DeleteModalProps {
   visible: boolean;
@@ -12,7 +12,15 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
   handleOk,
   handleCancel,
 }) => (
-  <Modal title="删除文件" open={visible} onOk={handleOk} onCancel={handleCancel}>
+  <Modal title="删除文件" open={visible} onOk={handleOk} onCancel={handleCancel}
+  footer={[
+    <Button key="cancel" onClick={handleCancel}>
+      取消
+    </Button>,
+    <Button key="submit" type="primary" onClick={handleOk}>
+      确定
+    </Button>
+  ]}>
     <p>确定要删除文件吗？</p>
   </Modal>
 );

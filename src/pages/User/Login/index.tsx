@@ -11,6 +11,7 @@ import React, { useState } from 'react';
 import { flushSync } from 'react-dom';
 import Settings from '../../../../config/defaultSettings';
 
+
 const useStyles = createStyles(({ token }) => {
   return {
     action: {
@@ -62,7 +63,7 @@ const LoginMessage: React.FC<{ content: string }> = ({ content }) => (
 
 const Login: React.FC = () => {
   const [userLoginState, setUserLoginState] = useState<User.LoginResult>({});
-  const [category, setCategory] = useState<User.LoginType>('username');
+  const [category, setCategory] = useState<User.LoginType>("username");
   const { initialState, setInitialState } = useModel('@@initialState');
   const { styles } = useStyles();
   const intl = useIntl();
@@ -79,7 +80,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (values: API.LoginParams) => {
+  const handleSubmit = async (values: User.LoginParams) => {
     try {
       const msg = await login({ ...values, category });
       if (msg.code === 200) {

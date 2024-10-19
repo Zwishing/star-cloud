@@ -1,104 +1,90 @@
+import { Source } from '@/services/source/typings';
+import { formatFileSize, removeFileExtension } from '@/util/util';
 import { ProForm, ProFormRadio, ProFormSelect, ProFormText } from '@ant-design/pro-form';
-import { Button, Modal, Steps, message } from 'antd';
+import { Button, Checkbox, Flex, Input, Modal, Steps, message,Typography, Form, Select } from 'antd';
+import { Divider } from 'rc-menu';
 import { useState } from 'react';
 
-const { Step } = Steps;
+const CheckboxGroup  = Checkbox.Group;
 
-const PublishModal = ({ visible, handleOk, handleCancel, selectedFile }) => {
-  const [currentStep, setCurrentStep] = useState(0);
 
-  const steps = [
-    {
-      title: '选择发布类型',
-      content: (
-        <ProForm>
-          <ProFormRadio.Group
-            name="publishType"
-            label="发布类型"
-            options={[
-              { label: '公开', value: 'public' },
-              { label: '私密', value: 'private' },
-            ]}
-            rules={[{ required: true, message: '请选择发布类型' }]}
-          />
-        </ProForm>
-      ),
-    },
-    {
-      title: '选择发布目标',
-      content: (
-        <ProForm>
-          <ProFormSelect
-            name="publishTarget"
-            label="发布目标"
-            options={[
-              { label: '目标 1', value: 'target1' },
-              { label: '目标 2', value: 'target2' },
-            ]}
-            rules={[{ required: true, message: '请选择发布目标' }]}
-          />
-        </ProForm>
-      ),
-    },
-    {
-      title: '确认发布信息',
-      content: (
-        <ProForm>
-          <ProFormText
-            name="fileName"
-            label="文件名称"
-            initialValue={selectedFile?.title}
-            disabled
-          />
-          <ProFormText name="publishType" label="发布类型" initialValue="public" disabled />
-          <ProFormText name="publishTarget" label="发布目标" initialValue="target1" disabled />
-        </ProForm>
-      ),
-    },
-  ];
+interface PublishModalProps{
+  visible: boolean;
+  handleOk: () => void;
+  handleCancel: () => void;
+  selectedItems: Source.Item[];
+}
 
-  const next = () => {
-    setCurrentStep(currentStep + 1);
-  };
+const PublishModal:React.FC<PublishModalProps> = ({ visible, handleOk, handleCancel, selectedItems }) => {
 
-  const prev = () => {
-    setCurrentStep(currentStep - 1);
-  };
-
-  const handleFinish = () => {
-    message.success('发布成功');
-    handleOk();
-  };
 
   return (
     <Modal
-      title="发布文件"
+      title="发布服务"
       open={visible}
       onCancel={handleCancel}
       footer={[
-        currentStep > 0 && (
-          <Button key="back" onClick={prev}>
-            上一步
-          </Button>
-        ),
-        currentStep < steps.length - 1 && (
-          <Button key="next" type="primary" onClick={next}>
-            下一步
-          </Button>
-        ),
-        currentStep === steps.length - 1 && (
-          <Button key="submit" type="primary" onClick={handleFinish}>
-            确认发布
-          </Button>
-        ),
+        <Button key="cancel" onClick={handleCancel}>
+          取消
+        </Button>,
+        <Button key="submit" type="primary" onClick={handleOk}>
+          确定
+        </Button>
       ]}
     >
-      <Steps current={currentStep}>
-        {steps.map((step, index) => (
-          <Step key={index} title={step.title} />
-        ))}
-      </Steps>
-      <div style={{ marginTop: 24 }}>{steps[currentStep].content}</div>
+    {/* <Divider/> */}
+      <Form style={{ marginTop: '24px' }}>
+        <Form.Item
+          label="数据源"
+          name="fileName"
+          initialValue={selectedItems[0]?.name}
+        >
+          <Input
+            placeholder="数据源"
+            suffix={formatFileSize(selectedItems[0]?.size)}
+            disabled={true}
+          />
+        </Form.Item>
+        <Form.Item
+          label="服务名称"
+          required={ true }
+          name="serviceName"
+
+          initialValue={removeFileExtension(selectedItems[0]?.name)}
+        >
+          <Input
+            placeholder="服务名称"
+            showCount maxLength={20}
+          />
+        </Form.Item>
+        <Form.Item
+          label="服务类型"
+          required={ true }
+          name="serviceType"
+          initialValue={['矢量瓦片','要素服务']}
+        >
+        <Select
+          mode="multiple"
+          style={{ width: '100%' }}
+          placeholder="请选择服务类型"
+          options={[
+            { value: '矢量瓦片', label: '矢量瓦片' },
+            { value: '要素服务', label: '要素服务' },
+            { value: '要素服务', label: '要素服务' }
+          ]}
+        />
+        </Form.Item>
+        <Form.Item
+          label="服务描述"
+          name="serviceDescription"
+        >
+          <Input.TextArea
+            placeholder="请输入服务描述（选填）"
+            showCount maxLength={100}
+            rows={4}
+          />
+        </Form.Item>
+      </Form>
     </Modal>
   );
 };

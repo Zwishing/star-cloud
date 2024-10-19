@@ -22,8 +22,8 @@ declare namespace User {
   type LoginType = 'username' | 'email' | 'phone';
 
   type LoginParams = {
-    userAccount?: string;
-    password?: string;
+    userAccount: string;
+    password: string;
     // autoLogin?: boolean;
     category?: LoginType;
   };

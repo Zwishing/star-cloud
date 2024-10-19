@@ -10,23 +10,24 @@ import './FileList.css';
 import FileListActions from './FileListActions';
 
 interface FileListProps {
-  selectedRowKeys: string[];
-  setSelectedRowKeys: (selecteKey: string[]) => void;
+  selectedRow: Source.Item[];
+  setSelectedRow: (selectedItems: Source.Item[]) => void;
   setDeleteModalOpen: () => void;
+  setPublishModalOpen:() => void;
 }
 
 const FileList: React.FC<FileListProps> = ({
-  selectedRowKeys,
-  setSelectedRowKeys,
+  selectedRow,
+  setSelectedRow,
   setDeleteModalOpen,
+  setPublishModalOpen
 }) => {
-  // const [tableHeight, setTableHeight] = useState<number>(0);
   const tableRef = useRef<HTMLDivElement | null>(null);
-  const size = useSize(tableRef);
+  // const size = useSize(tableRef);
 
-  const availableHeight =
-    tableRef.current && size ? size.height - tableRef.current.getBoundingClientRect().top - 90 : 0;
-  const tableHeight = availableHeight > 0 ? availableHeight : 0;
+  // const availableHeight =
+  //   tableRef.current && size ? size.height - tableRef.current.getBoundingClientRect().top - 90 : 0;
+  // const tableHeight = availableHeight > 0 ? availableHeight : 0;
 
   const { setNextDir } = useModel('CurrentDirModel', (model) => ({
     setNextDir: model.setNextDir,
@@ -36,22 +37,6 @@ const FileList: React.FC<FileListProps> = ({
     items: model.items,
     fetchNextItems: model.fetchNextItems,
   }));
-
-  // useEffect(() => {
-  //   const calculateHeight = () => {
-  //     if (tableRef.current) {
-  //       const availableHeight =
-  //         window.innerHeight - tableRef.current.getBoundingClientRect().top - 90; // Adjust for margin
-  //       setTableHeight(availableHeight > 0 ? availableHeight : 0);
-  //     }
-  //   };
-
-  //   calculateHeight();
-  //   window.addEventListener('resize', calculateHeight);
-  //   return () => {
-  //     window.removeEventListener('resize', calculateHeight);
-  //   };
-  // }, []);
 
   const handleRowClick = async (item: Source.Item) => {
     if (item.type === 'folder') {
@@ -99,21 +84,21 @@ const FileList: React.FC<FileListProps> = ({
 
   const rowSelection = {
     columnWidth: 48,
-    selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedRowKeys as string[]);
+    selectedRow: selectedRow.map(item => item.key),
+    onChange: (newSelectedRowKeys: React.Key[], selectedRows: Source.Item[]) => {
+      setSelectedRow(selectedRows);
     },
     selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT, Table.SELECTION_NONE],
   };
 
   return (
     <Flex gap="middle" vertical>
-      {selectedRowKeys.length > 0 && (
+      {selectedRow.length > 0 && (
         <Flex align="center" gap="middle">
-          <Button type="link" onClick={() => setSelectedRowKeys([])}>
+          <Button type="link" onClick={() => setSelectedRow([])}>
             取消选择
           </Button>
-          {`已选择${selectedRowKeys.length}项`}
+          {`已选择${selectedRow.length}项`}
         </Flex>
       )}
       <div ref={tableRef}>
@@ -127,13 +112,16 @@ const FileList: React.FC<FileListProps> = ({
             borderRadius: '12px',
             overflow: 'hidden',
           }}
-          scroll={{ y: tableHeight }} // Dynamic scroll height
           locale={{
             emptyText: <Empty description="无数据" />,
           }}
           virtual
         />
-        {selectedRowKeys.length > 0 && <FileListActions openDeleteModal={setDeleteModalOpen} />}
+        {selectedRow.length > 0 &&
+          <FileListActions
+          openDeleteModal={setDeleteModalOpen}
+          openPublishModal={setPublishModalOpen}
+          selectedRow={selectedRow}/>}
       </div>
     </Flex>
   );

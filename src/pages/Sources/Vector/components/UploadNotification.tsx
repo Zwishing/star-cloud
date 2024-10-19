@@ -104,8 +104,8 @@ const UploadNotification: React.FC<UploadNotificationProps> = forwardRef(
       uploadFile: model.uploadFile,
     }));
 
-    const { getCurentKey } = useModel('CurrentDirModel', (model) => ({
-      getCurentKey: model.getCurentKey,
+    const { getCurrentKey } = useModel('CurrentDirModel', (model) => ({
+      getCurrentKey: model.getCurrentKey,
     }));
 
     const handleUploadStart = async (file: File) => {
@@ -124,7 +124,7 @@ const UploadNotification: React.FC<UploadNotificationProps> = forwardRef(
 
       const uploadReq: Source.UploadReq = {
         sourceCategory: 'vector',
-        key: getCurentKey(),
+        key: getCurrentKey(),
         name: file.name,
         file: file, // Use the actual File object
       };

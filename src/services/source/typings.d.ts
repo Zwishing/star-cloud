@@ -4,6 +4,8 @@
 export declare namespace Source {
   type SourceCategory = 'vector' | 'imagery';
 
+  type ServiceCategory = 'mvt' | 'feature';
+
   type UploadReq = {
     sourceCategory: SourceCategory;
     key: string;
@@ -64,4 +66,12 @@ export declare namespace Source {
     name: string;
     path: string;
   };
+
+  type PublishReq = {
+    serviceName: string;
+    sourceCategory: SourceCategory;
+    sourceKey: string;
+    serviceCategory: ServiceCategory[];
+    description: string;
+  }
 }

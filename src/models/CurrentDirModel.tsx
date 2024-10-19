@@ -18,7 +18,7 @@ export default function CurrentDir() {
   // 设置主页目录，接收可选的 key 参数
   const setHomeDir = (key?: string) => {
     setCurrentDir((prev) => ({
-      keys: key ? [key] : prev.keys, // 如果有传入的 key，则使用它，否则保留原来的 keys
+      keys: key ? [key] : VectorHomeDir.keys, // 如果有传入的 key，则使用它，否则保留原来的 keys
       path: VectorHomeDir.path, // 保持原始 path
     }));
   };
@@ -58,7 +58,7 @@ export default function CurrentDir() {
     });
   };
 
-  const getCurentKey = () => currentDir.keys[currentDir.keys.length - 1];
+  const getCurrentKey = () => currentDir.keys[currentDir.keys.length - 1];
 
   const getFirstKey = () => currentDir.keys[0];
 
@@ -66,7 +66,7 @@ export default function CurrentDir() {
     if (index >= 0 && index < currentDir.keys.length) {
       return currentDir.keys[index];
     }
-    return getCurentKey();
+    return getCurrentKey();
   };
 
   return {
@@ -75,7 +75,7 @@ export default function CurrentDir() {
     setNextDir,
     setPrevDir,
     setDirByIndex,
-    getCurentKey,
+    getCurrentKey,
     getFirstKey,
     getKeyByIndex,
   };

@@ -9,13 +9,14 @@ import FileSystemHeader from './FileSystemHeader';
 import FileUploadModal from './FileUploadModal';
 import FolderModal from './FolderModal';
 import UploadNotification from './UploadNotification';
+import PublishModal from './PublishModal';
 
 const SourceCategory = 'vector';
 
 const FileSystem: React.FC = () => {
   const [newFolderName, setNewFolderName] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [selectedRow, setSelectedRow] = useState<Source.Item[]>([]);
   const [folderModalVisible, { setTrue: setFolderModalOpen, setFalse: setFolderModalClose }] =
     useBoolean(false);
   const [uploadModalVisible, { setTrue: setUploadModalOpen, setFalse: setUploadModalClose }] =
@@ -23,17 +24,21 @@ const FileSystem: React.FC = () => {
   const [deleteModalVisible, { setTrue: setDeleteModalOpen, setFalse: setDeleteModalClose }] =
     useBoolean(false);
 
+  const [publishModalVisible, { setTrue: setPublishModalOpen, setFalse: setPublishModalClose }] =
+    useBoolean(false);
+
+
   const [uploadListVisible, setUploadListVisible] = useState(false);
 
   const uploadNotificationRef = useRef<any>(); // 定义 uploadNotificationRef 的类型
 
-  const { currentDir, setHomeDir, setPrevDir, getCurentKey, getFirstKey } = useModel(
+  const { currentDir, setHomeDir, setPrevDir, getCurrentKey, getFirstKey } = useModel(
     'CurrentDirModel',
     (model) => ({
       currentDir: model.currentDir,
       setHomeDir: model.setHomeDir,
       setPrevDir: model.setPrevDir,
-      getCurentKey: model.getCurentKey,
+      getCurrentKey: model.getCurrentKey,
       getFirstKey: model.getFirstKey,
     }),
   );
@@ -57,7 +62,7 @@ const FileSystem: React.FC = () => {
     if (newFolderName.trim()) {
       const folder: Source.NewFolderReq = {
         sourceCategory: SourceCategory,
-        key: getCurentKey(),
+        key: getCurrentKey(),
         name: newFolderName,
         path: `${currentDir.path.join('')}/${newFolderName}`,
       };
@@ -71,14 +76,20 @@ const FileSystem: React.FC = () => {
   };
 
   const handleDeleteOk = () => {
-    handleDeleteItems({ key: selectedRowKeys, sourceCategory: SourceCategory });
-    setSelectedRowKeys([]);
+    const keysToDelete = selectedRow.map(item => item.key);
+    handleDeleteItems({ key: keysToDelete, sourceCategory: SourceCategory });
+    setSelectedRow([]);
     setDeleteModalClose();
+  };
+
+  const handlePublishOk = () => {
+    // 发布代码逻辑
+    setPublishModalClose();
   };
 
   const handleBackButtonClick = () => {
     fetchPrevItems({
-      key: getCurentKey(),
+      key: getCurrentKey(),
       sourceCategory: SourceCategory,
     });
     setPrevDir();
@@ -89,7 +100,7 @@ const FileSystem: React.FC = () => {
       key: getFirstKey(),
       sourceCategory: SourceCategory,
     });
-    setHomeDir(items[0].parentKey);
+    setHomeDir();
   };
 
   const handleUploadStart = (file: UploadFile) => {
@@ -105,7 +116,7 @@ const FileSystem: React.FC = () => {
       key: getFirstKey(),
       sourceCategory: SourceCategory,
     });
-    setHomeDir();
+    // setHomeDir();
   }, []);
 
   return (
@@ -119,9 +130,10 @@ const FileSystem: React.FC = () => {
         setSearchKeyword={setSearchKeyword}
       />
       <FileList
-        selectedRowKeys={selectedRowKeys}
-        setSelectedRowKeys={setSelectedRowKeys}
+        selectedRow={selectedRow}
+        setSelectedRow={setSelectedRow}
         setDeleteModalOpen={setDeleteModalOpen}
+        setPublishModalOpen={setPublishModalOpen}
       />
       <FolderModal
         visible={folderModalVisible}
@@ -140,6 +152,13 @@ const FileSystem: React.FC = () => {
         visible={uploadModalVisible}
         onUploadStart={handleUploadStart}
         onCancel={setUploadModalClose}
+      />
+
+      <PublishModal
+        visible={publishModalVisible}
+        handleOk={handlePublishOk}
+        handleCancel={setPublishModalClose}
+        selectedItems={selectedRow}
       />
       <UploadNotification
         visible={uploadListVisible}

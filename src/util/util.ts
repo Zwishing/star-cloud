@@ -1,5 +1,6 @@
 import { UploadFile } from 'antd';
 import JSZip from 'jszip';
+import { createHash } from 'crypto';
 
 interface ValidationResult {
   isValid: boolean;
@@ -23,7 +24,6 @@ export async function validateZipShapefile(file: UploadFile): Promise<Validation
       const ext = fileName.slice(-4).toLowerCase();
       if (ext === '.shp') {
         shpCount++;
-
         // 检查对应的 .dbf, .shx, .prj 文件是否存在
         if (!fileNames.includes(fileName.replace('.shp', '.dbf'))) {
           errors.push(`缺少 ${fileName.replace('.shp', '.dbf')} 文件。`);
@@ -45,10 +45,8 @@ export async function validateZipShapefile(file: UploadFile): Promise<Validation
         shpCount: 0,
         validFiles: [],
       };
-    } else if (shpCount > 0 && errors.length === 0) {
-      return { isValid: true, error: null, shpCount: shpCount, validFiles: fileNames };
     } else {
-      return { isValid: false, error: errors.join(' '), shpCount: shpCount, validFiles: fileNames };
+      return { isValid: true, error: null, shpCount: shpCount, validFiles: fileNames };
     }
   } catch (error) {
     return {
@@ -70,4 +68,15 @@ export function formatFileSize(size: number | undefined) {
   } else {
     return `${(size / 1024).toFixed(1)} KB`;
   }
+}
+
+export function hashPassword(password: string): string {
+  return createHash('md5').update(password).digest('hex');
+}
+
+export function removeFileExtension(filename:string) {
+  if (filename === undefined || filename === '' || filename === null){
+    return "";
+  }
+  return filename.split('.').slice(0, -1).join('.');
 }

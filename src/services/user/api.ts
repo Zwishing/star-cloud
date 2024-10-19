@@ -1,6 +1,7 @@
 // @ts-ignore
 /* eslint-disable */
 import { request } from '@umijs/max';
+import {hashPassword} from '@/util/util'
 
 /** 获取当前的用户 GET /v1/user/currentUser */
 export async function currentUser(options?: { [key: string]: any }) {
@@ -22,6 +23,11 @@ export async function outLogin(options?: { [key: string]: any }) {
 
 /** 登录接口 POST /v1/user/login */
 export async function login(body: User.LoginParams, options?: { [key: string]: any }) {
+
+  // 给秘密加入MD5加密
+  // const password = hashPassword(body.password);
+  // body = {...body,password}
+
   return request<User.LoginResult>('/v1/user/login', {
     method: 'POST',
     headers: {
