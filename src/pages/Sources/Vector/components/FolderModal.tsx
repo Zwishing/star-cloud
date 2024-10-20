@@ -1,17 +1,27 @@
 import { Input, Modal } from 'antd';
 
-interface FolderModalProps{
-  visible:boolean;
-  handleOk:()=>void;
-  handleCancel:()=>void;
-  newFolderName:string;
-  setNewFolderName:(name:string)=>void;
+interface FolderModalProps {
+  visible: boolean;
+  handleOk: () => void;
+  handleCancel: () => void;
+  newFolderName: string;
+  setNewFolderName: (name: string) => void;
 }
 
-const FolderModal:React.FC<FolderModalProps> = ({ visible, handleOk, handleCancel, newFolderName, setNewFolderName }) => (
+const FolderModal: React.FC<FolderModalProps> = ({
+  visible,
+  handleOk,
+  handleCancel,
+  newFolderName,
+  setNewFolderName,
+}) => (
   <Modal title="新建文件夹" open={visible} onOk={handleOk} onCancel={handleCancel}>
     <Input
       value={newFolderName}
+      count={{
+        show: true,
+        max: 20,
+      }}
       onChange={(e) => setNewFolderName(e.target.value)}
       placeholder="请输入文件夹名称"
     />
