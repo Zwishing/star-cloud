@@ -70,7 +70,7 @@ export async function deleteItems(params: Source.DeleteItems, options?: { [p: st
 
 
 export async function publish(body: Source.PublishReq, options?: { [p: string]: any }) {
-  return request<Source.PublishReq>(`/v1/source/${body.sourceCategory}/publish`, {
+  return request<Source.PublishResponse>(`/v1/source/${body.sourceCategory}/publish`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

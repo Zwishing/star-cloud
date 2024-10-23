@@ -28,6 +28,7 @@ export declare namespace Source {
     type: 'file' | 'folder';
     path: string;
     size: number;
+    status:number;
     lastModified: string;
   };
 
@@ -71,7 +72,13 @@ export declare namespace Source {
     serviceName: string;
     sourceCategory: SourceCategory;
     sourceKey: string;
-    serviceCategory: ServiceCategory[];
+    serviceCategory: ServiceCategory;
     description: string;
+  }
+
+  type PublishResponse = {
+    code: number;
+    data: string[];
+    msg: string;
   }
 }

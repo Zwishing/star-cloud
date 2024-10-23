@@ -1,9 +1,11 @@
 import { Source } from '@/services/source/typings';
 import { formatFileSize, removeFileExtension } from '@/util/util';
 import { ProForm, ProFormRadio, ProFormSelect, ProFormText } from '@ant-design/pro-form';
+import { useRequest } from '@umijs/max';
 import { Button, Checkbox, Flex, Input, Modal, Steps, message,Typography, Form, Select } from 'antd';
 import { Divider } from 'rc-menu';
 import { useState } from 'react';
+import { publish } from '@/services/source/files'
 
 const CheckboxGroup  = Checkbox.Group;
 
@@ -16,7 +18,32 @@ interface PublishModalProps{
 }
 
 const PublishModal:React.FC<PublishModalProps> = ({ visible, handleOk, handleCancel, selectedItems }) => {
+  const [form] = Form.useForm();
 
+  const { run: handlePublish } = useRequest(
+    (param: Source.PublishReq) => publish(param),
+    {
+      manual: true,
+      onSuccess: (resp) => {
+        console.log(resp)
+      },
+      onError: (err) => {
+        message.error(`发布数据出错:${err.message}`); // 设置错误信息
+      },
+    },
+  );
+
+  const handlePublishOk = ()=>{
+    console.log(selectedItems)
+    handlePublish({
+      sourceKey: selectedItems[0].key,
+      sourceCategory: "vector",
+      serviceName: form.getFieldValue("serviceName"),
+      description: form.getFieldValue("description"),
+      serviceCategory: "mvt",
+    });
+    handleOk();
+  }
 
   return (
     <Modal
@@ -27,13 +54,16 @@ const PublishModal:React.FC<PublishModalProps> = ({ visible, handleOk, handleCan
         <Button key="cancel" onClick={handleCancel}>
           取消
         </Button>,
-        <Button key="submit" type="primary" onClick={handleOk}>
+        <Button key="submit" type="primary" onClick={handlePublishOk}>
           确定
         </Button>
       ]}
     >
     {/* <Divider/> */}
-      <Form style={{ marginTop: '24px' }}>
+      <Form
+      form={form}
+      style={{ marginTop: '24px' }}
+      >
         <Form.Item
           label="数据源"
           name="fileName"

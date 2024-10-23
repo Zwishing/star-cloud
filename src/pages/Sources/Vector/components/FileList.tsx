@@ -1,10 +1,10 @@
 import { FolderIcon, ZipIcon } from '@/components/Icon';
 import { Source } from '@/services/source/typings';
 import { formatFileSize } from '@/util/util';
-import { FileTextTwoTone } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, FileTextTwoTone, SyncOutlined, WarningOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
 import { useSize } from 'ahooks';
-import { Button, Empty, Flex, Space, Table } from 'antd';
+import { Button, Empty, Flex, Space, Table, Tag, Timeline } from 'antd';
 import { useRef } from 'react';
 import './FileList.css';
 import FileListActions from './FileListActions';
@@ -23,11 +23,6 @@ const FileList: React.FC<FileListProps> = ({
   setPublishModalOpen
 }) => {
   const tableRef = useRef<HTMLDivElement | null>(null);
-  // const size = useSize(tableRef);
-
-  // const availableHeight =
-  //   tableRef.current && size ? size.height - tableRef.current.getBoundingClientRect().top - 90 : 0;
-  // const tableHeight = availableHeight > 0 ? availableHeight : 0;
 
   const { setNextDir } = useModel('CurrentDirModel', (model) => ({
     setNextDir: model.setNextDir,
@@ -56,6 +51,24 @@ const FileList: React.FC<FileListProps> = ({
     return <FileTextTwoTone />;
   };
 
+  const expandedRowRender = () => {
+    const timelineItems = [
+      { children: '开始上传', color: 'green', label: '2023-06-01 10:00:00' },
+      { children: '上传完成', color: 'blue', label: '2023-06-01 10:05:00' },
+      { children: '开始质检', color: 'gray', label: '2023-06-01 10:10:00' },
+      { children: '质检完成', color: 'green', label: '2023-06-01 10:15:00' },
+      { children: '开始发布', color: 'blue', label: '2023-06-01 10:20:00' },
+      { children: '发布完成', color: 'gray', label: '2023-06-01 10:25:00' },
+    ];
+
+    return (
+      <Timeline
+        items={timelineItems}
+        mode="alternate"
+      />
+    );
+  };
+
   const columns = [
     {
       title: '名称',
@@ -75,17 +88,40 @@ const FileList: React.FC<FileListProps> = ({
       sorter: (a: Source.Item, b: Source.Item) => a.size - b.size,
     },
     {
+      title: '数量',
+      dataIndex: 'fileCount',
+      render: (fileCount: number | undefined, item: Source.Item) => {
+        if (item.type === 'folder' || item.name.toLowerCase().endsWith('.zip')) {
+          return fileCount || '-';
+        }
+        return '-';
+      },
+    },
+    {
       title: '修改日期',
       dataIndex: 'lastModified',
       sorter: (a: Source.Item, b: Source.Item) =>
         new Date(a.lastModified).getTime() - new Date(b.lastModified).getTime(),
     },
+    {
+      title: '状态',
+      key: 'tags',
+      dataIndex: 'tags',
+      render: () => (
+        <span>
+          <Tag icon={<CheckCircleOutlined />} color="success">发布完成</Tag>
+          <Tag icon={<SyncOutlined spin />} color="processing">质检中</Tag>
+          <Tag icon={<CloseCircleOutlined />} color="error">质检失败</Tag>
+          <Tag icon={<WarningOutlined />} color="warning">警告</Tag>
+        </span>
+      ),
+    },
   ];
 
   const rowSelection = {
     columnWidth: 48,
-    selectedRow: selectedRow.map(item => item.key),
-    onChange: (newSelectedRowKeys: React.Key[], selectedRows: Source.Item[]) => {
+    selectedRowKeys: selectedRow.map(item => item.key),
+    onChange: (_: React.Key[], selectedRows: Source.Item[]) => {
       setSelectedRow(selectedRows);
     },
     selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT, Table.SELECTION_NONE],
@@ -108,6 +144,10 @@ const FileList: React.FC<FileListProps> = ({
           dataSource={items}
           pagination={false}
           rowSelection={rowSelection}
+          expandable={{
+            expandedRowRender,
+            rowExpandable: (record) => record.type !== 'folder',
+          }}
           style={{
             borderRadius: '12px',
             overflow: 'hidden',
@@ -115,7 +155,6 @@ const FileList: React.FC<FileListProps> = ({
           locale={{
             emptyText: <Empty description="无数据" />,
           }}
-          virtual
         />
         {selectedRow.length > 0 &&
           <FileListActions
